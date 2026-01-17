@@ -30,6 +30,6 @@ jobs:
         with:
           push: true
           platforms: linux/amd64, linux/arm64
-          tags:
+          tags: |
             ghcr.io/thegamefire/apbasicstats:${{ github.ref_name }}
             ghcr.io/thegamefire/apbasicstats:latest
