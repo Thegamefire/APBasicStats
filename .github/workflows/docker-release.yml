@@ -13,9 +13,11 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout Repository
+        uses: actions/checkout@v4
 
-      - uses: docker/setup-buildx-action@v3
+      - name: Build Image
+        uses: docker/setup-buildx-action@v3
 
       - uses: docker/login-action@v3
         with:
@@ -23,7 +25,8 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - uses: docker/build-push-action@v5
+      - name: Push Image
+        uses: docker/build-push-action@v5
         with:
           push: true
-          tags: ghcr.io/${{ github.repository_owner }}/apbasicstats:${{ github.ref_name }}
+          tags: ghcr.io/thegamefire/apbasicstats:${{ github.ref_name }}
