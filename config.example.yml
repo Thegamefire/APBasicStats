@@ -1,0 +1,6 @@
+ap_host: localhost:38281
+ap_pass: ""
+ap_slots:
+  - Player1
+  - Player2
+  - [Player3, 3rd Player]

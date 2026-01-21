@@ -1,4 +1,4 @@
-import {env} from '$env/dynamic/private';
+import { config } from '$lib/server/config';
 import {Client} from "archipelago.js";
 import type {Tracker} from "$lib/types";
 import {building} from "$app/environment";
@@ -9,23 +9,24 @@ const clients: { [slot: string]: Client } = {};
 
 function connect() {
     try {
-        for (let slot of JSON.parse(<string>env.AP_SLOTS)) {
-            clients[slot] = new Client();
+        for (let aliases of config.ap_slots) {
+            const slot = aliases[0]
+            const client = new Client();
 
-            clients[slot].room.on('locationsChecked', (e) => {
+            client.room.on('locationsChecked', (e) => {
                 if (tracker[slot]) {
-                    tracker[slot].collectedChecksCount = clients[slot].room.checkedLocations.length;
+                    tracker[slot].collectedChecksCount = client.room.checkedLocations.length;
                     sendUpdate();
                 }
             });
-            clients[slot].deathLink.on('deathReceived', (source) => {
-                if (source == slot) {
+            client.deathLink.on('deathReceived', (source) => {
+                if (aliases.includes(source)) {
                     tracker[slot].deathCount++;
                     sendUpdate();
                 }
             })
-            clients[slot].login(<string>env.AP_HOST, slot, "", {
-                password: env.AP_PASSWORD,
+            client.login(config.ap_host, slot, "", {
+                password: config.ap_pass,
                 tags: ["DeathLink", "Tracker", "NoText"]
             }).then(r => {
                 console.log(`Connected to Slot ${slot}`);
@@ -37,8 +38,10 @@ function connect() {
                 };
                 sendUpdate();
             });
+            clients[slot] = client;
         }
     } catch (e) {
+        console.log(e)
         console.error("AP_SLOTS environment variable is formatted incorrectly!");
     }
 }
