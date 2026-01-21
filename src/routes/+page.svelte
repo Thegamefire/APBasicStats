@@ -16,11 +16,9 @@
     });
 </script>
 
-<div class="bg-[#faf9ff] dark:bg-[#16141f] min-h-screen">
-    <Navbar/>
-    <div class="w-full flex flex-col items-center">
-        <div class="w-4/5 rounded-xl overflow-hidden">
-            <TrackerTable {tracker}/>
-        </div>
+
+<div class="w-full flex flex-col items-center">
+    <div class="w-4/5 rounded-xl overflow-hidden">
+        <TrackerTable {tracker}/>
     </div>
 </div>
