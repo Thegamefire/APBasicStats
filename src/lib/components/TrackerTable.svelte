@@ -52,9 +52,9 @@
     </tr>
     </thead>
     <tbody>
-    {#each slots as slot}
-        <tr class=" bg-violet-100 dark:bg-violet-500 dark:text-white">
-            <td class="py-1 pb-2">{slot}</td>
+    {#each slots as slot, i}
+        <tr class=" {i%2===1? 'bg-violet-100 dark:bg-violet-500':'bg-violet-200/60 dark:bg-violet-500/95'}  dark:text-white">
+            <td class="py-1 px-1 pb-2">{slot}</td>
             <td>{tracker[slot].game}</td>
             <td>{tracker[slot].collectedChecksCount}/{tracker[slot].totalChecksCount}</td>
             <td>{getPercentage(slot)}%</td>
