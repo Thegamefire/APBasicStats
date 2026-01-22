@@ -19,7 +19,3 @@ function parseConfig(file: string): Config {
         ap_slots: configFile.ap_slots.map((a: string | string[]) => Array.isArray(a) ? a : [a])
     }
 }
-
-function getAPSlots() {
-    return config.ap_slots.map(s => s[0]);
-}

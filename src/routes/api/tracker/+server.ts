@@ -1,6 +1,8 @@
 import {subscribe, getTracker} from '$lib/server/tracker';
 
 export function GET() {
+
+    let closed = false;
     const stream = new ReadableStream({
         start(controller) {
             // Send current value immediately
@@ -10,14 +12,20 @@ export function GET() {
 
             // Subscribe to future updates
             const unsubscribe = subscribe((tracker) => {
-                controller.enqueue(
-                    `data: ${JSON.stringify(tracker)}\n\n`
-                );
+                if (!closed) {
+                    controller.enqueue(
+                        `data: ${JSON.stringify(tracker)}\n\n`
+                    );
+                }
             });
 
             // Cleanup on disconnect
             return () => unsubscribe();
+        },
+        cancel: _ => {
+            closed = true;
         }
+
     });
 
     return new Response(stream, {

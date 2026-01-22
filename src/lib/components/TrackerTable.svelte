@@ -13,7 +13,7 @@
         console.log(sortBy)
     }
 
-    let slots = $derived(Object.keys(tracker).sort((a, b) => {
+    let slots = $derived(Object.keys(tracker).toSorted((a, b) => {
         switch (sortBy.col) {
             case "Game":
                 return tracker[a].game.localeCompare(tracker[b].game) * (sortBy.ascending ? 1 : -1);
@@ -42,7 +42,7 @@
     }
 </script>
 
-<table class="w-full text-xl text-center">
+<table class="w-full md:text-lg lg:text-xl text-center">
     <thead>
     <tr>
         {#each ["Slot", "Game", "Collected Checks", "Completion Percentage", "Death Count"] as header}
