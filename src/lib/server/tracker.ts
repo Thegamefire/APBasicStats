@@ -1,8 +1,13 @@
-import { config } from '$lib/server/config';
 import {Client, ColorMessageNode, type MessageNode} from "archipelago.js";
 import type {Tracker, TrackerLogNode} from "$lib/types";
 import {building} from "$app/environment";
+import {getConfig, type Config} from "$lib/server/config";
 
+let config: Config;
+
+if (!building) {
+    config = await getConfig();
+}
 
 const tracker: Tracker = {
     logs: [],

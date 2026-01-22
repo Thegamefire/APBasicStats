@@ -1,11 +1,17 @@
 import { readFile } from 'fs/promises';
 import YAML from 'yaml';
 
+let cachedConfig: Config;
 
-export const config =  await readFile('config.yml', 'utf8').then(parseConfig);
+export async function getConfig() {
+    if (!cachedConfig) {
+        const raw = await readFile('config.yml', 'utf8');
+        cachedConfig = parseConfig(raw);
+    }
+    return cachedConfig;
+}
 
-
-type Config = {
+export type Config = {
     ap_host: string,
     ap_pass: string,
     ap_slots: string[][]
