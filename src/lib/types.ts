@@ -1,7 +1,7 @@
 export type TrackedSlotData = {
     game: string,
-    collectedChecksCount: number,
-    totalChecksCount: number,
+    collectedChecks: string[],
+    uncollectedChecks: string[],
     deathCount: number
 }
 
@@ -11,4 +11,21 @@ export type TrackerLogNode = {
     color?: string;
 }
 
-export type Tracker = { logs: TrackerLogNode[][], data: {[slot: string]: TrackedSlotData} }
+export type Tracker = { logs: TrackerLogNode[][], data: { [slot: string]: TrackedSlotData } }
+
+export type GeneralTrackerData = {
+    logs: TrackerLogNode[][],
+    data: {
+        [slot: string]: {
+            game: string,
+            collectedChecksCount: number,
+            totalChecksCount: number,
+            deathCount: number
+        }
+    }
+}
+
+export type SlotTrackerData = {
+    logs: TrackerLogNode[][]
+    data: TrackedSlotData
+}

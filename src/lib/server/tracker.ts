@@ -23,7 +23,7 @@ function initTracker() {
 
             client.room.on('locationsChecked', (_) => {
                 if (tracker.data[slot]) {
-                    tracker.data[slot].collectedChecksCount = client.room.checkedLocations.length;
+                    tracker.data[slot].collectedChecks = client.room.checkedLocations.map((id) => client.package.lookupLocationName(client.game, id));
                     sendUpdate();
                 }
             });
@@ -69,14 +69,14 @@ function connectClient(slot: string) {
     const client = clients[slot];
     client.login(config.ap_host, slot, "", {
         password: config.ap_pass,
-        tags: ["DeathLink", "Tracker", "APBasicStats"]
+        tags: ["DeathLink", "Tracker"]
     }).then(_ => {
         console.log(`Connected to Slot ${slot}`);
         tracker.data[slot] = {
-            game: client.game,
-            collectedChecksCount: client.room.checkedLocations.length,
-            totalChecksCount: client.room.missingLocations.length + client.room.checkedLocations.length,
-            deathCount: (tracker.data[slot]?.deathCount) ? tracker.data[slot].deathCount : 0,
+            game: clients[slot].game,
+            collectedChecks: clients[slot].room.checkedLocations.map((id) => client.package.lookupLocationName(client.game, id)),
+            uncollectedChecks: clients[slot].room.missingLocations.map((id) => client.package.lookupLocationName(client.game, id)),
+            deathCount: 0,
         };
         sendUpdate();
     });

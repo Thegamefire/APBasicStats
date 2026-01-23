@@ -1,21 +1,27 @@
 import {subscribe, getTracker} from '$lib/server/tracker';
 import type {Tracker} from "$lib/types";
+import {error} from "@sveltejs/kit";
 
-export function GET() {
+export function GET({params}) {
+    const {slotName} = params;
+    if (!getTracker().data[slotName]) {
+        throw error(400, "Invalid Slot");
+    }
+
 
     let closed = false;
     const stream = new ReadableStream({
         start(controller) {
             // Send current value immediately
             controller.enqueue(
-                `data: ${JSON.stringify(getGeneralData(getTracker()))}\n\n`
+                `data: ${JSON.stringify(getSlotData(getTracker(), slotName))}\n\n`
             );
 
             // Subscribe to future updates
             const unsubscribe = subscribe((tracker) => {
                 if (!closed) {
                     controller.enqueue(
-                        `data: ${JSON.stringify(getGeneralData(tracker))
+                        `data: ${JSON.stringify(getSlotData(tracker, slotName))
                         }}))}\n\n`
                     );
                 }
@@ -40,27 +46,9 @@ export function GET() {
 }
 
 
-function getGeneralData(tracker: Tracker) {
-    let clientData: {
-        [slot: string]: {
-            game: string,
-            collectedChecksCount: number,
-            totalChecksCount: number,
-            deathCount: number
-        }
-    } = {}
-
-    for (let slotName in tracker.data) {
-        const originalData = tracker.data[slotName];
-        clientData[slotName] = {
-            game: originalData.game,
-            collectedChecksCount: originalData.collectedChecks.length,
-            totalChecksCount: originalData.uncollectedChecks.length + originalData.collectedChecks.length,
-            deathCount: originalData.deathCount
-        }
-    }
+function getSlotData(tracker: Tracker, slot: string) {
     return {
         logs: tracker.logs,
-        data: clientData,
+        data: tracker.data[slot],
     }
 }
