@@ -15,7 +15,7 @@ const tracker: Tracker = {
 }
 const clients: { [slot: string]: Client } = {};
 
-function connect() {
+function initTracker() {
     try {
         for (let aliases of config.ap_slots) {
             const slot = aliases[0]
@@ -33,32 +33,28 @@ function connect() {
                     sendUpdate();
                 }
             })
-            client.login(config.ap_host, slot, "", {
-                password: config.ap_pass,
-                tags: ["DeathLink", "Tracker"]
-            }).then(_ => {
-                console.log(`Connected to Slot ${slot}`);
-                tracker.data[slot] = {
-                    game: clients[slot].game,
-                    collectedChecksCount: clients[slot].room.checkedLocations.length,
-                    totalChecksCount: clients[slot].room.missingLocations.length + clients[slot].room.checkedLocations.length,
-                    deathCount: 0,
-                };
-                sendUpdate();
-            });
+            client.socket.on("disconnected", () => {
+                console.log(`Disconnected Slot ${slot}, Trying Reconnect in 5 sec`);
+                setTimeout(() => {
+                    console.log(`Trying to Reconnect to Slot ${slot}`);
+                    connectClient(slot);
+                }, 5000);
+            })
+
             clients[slot] = client;
+            connectClient(slot)
         }
-        if (config.ap_slots.length>0) {
+        if (config.ap_slots.length > 0) {
             const log_client = clients[config.ap_slots[0][0]];
             log_client.messages.on("message", (_, nodes) => {
                 tracker.logs.push(nodes.map(serializeApMsg))
                 sendUpdate();
             });
-            log_client.deathLink.on("deathReceived", (source,_,  cause) => {
+            log_client.deathLink.on("deathReceived", (source, _, cause) => {
                 tracker.logs.push([
                     {type: "player", text: source},
                     {type: "color", text: " died", color: "red"},
-                    {type: "text", text: cause?": "+cause:""},
+                    {type: "text", text: cause ? ": " + cause : ""},
                 ]);
                 sendUpdate();
             })
@@ -67,6 +63,23 @@ function connect() {
         console.log(e)
         console.error("AP_SLOTS environment variable is formatted incorrectly!");
     }
+}
+
+function connectClient(slot: string) {
+    const client = clients[slot];
+    client.login(config.ap_host, slot, "", {
+        password: config.ap_pass,
+        tags: ["DeathLink", "Tracker", "APBasicStats"]
+    }).then(_ => {
+        console.log(`Connected to Slot ${slot}`);
+        tracker.data[slot] = {
+            game: client.game,
+            collectedChecksCount: client.room.checkedLocations.length,
+            totalChecksCount: client.room.missingLocations.length + client.room.checkedLocations.length,
+            deathCount: (tracker.data[slot]?.deathCount) ? tracker.data[slot].deathCount : 0,
+        };
+        sendUpdate();
+    });
 }
 
 export function getTracker(): Tracker {
@@ -93,5 +106,5 @@ function serializeApMsg(node: MessageNode): TrackerLogNode {
 }
 
 if (!building) {
-    connect();
+    initTracker();
 }
