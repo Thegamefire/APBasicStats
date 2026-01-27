@@ -57,7 +57,7 @@
             <td class="py-1 px-1 pb-2">{slot}</td>
             <td>{tracker[slot].game}</td>
             <td>{tracker[slot].collectedChecksCount}/{tracker[slot].totalChecksCount}</td>
-            <td>{getPercentage(slot)}%</td>
+            <td>{getPercentage(slot).toFixed(2)}%</td>
             <td>{tracker[slot].deathCount}</td>
         </tr>
     {/each}
