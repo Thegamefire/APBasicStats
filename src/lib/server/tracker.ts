@@ -27,6 +27,18 @@ function initTracker() {
                     sendUpdate();
                 }
             });
+            client.items.on("itemsReceived", (items) => {
+                if (tracker.data[slot]) {
+                    tracker.data[slot].receivedItems.push(...items.map(i => {
+                        return {
+                            location: i.locationName,
+                            name: i.name,
+                            sender: i.sender.name
+                        }
+                    }));
+                    sendUpdate();
+                }
+            })
             client.deathLink.on('deathReceived', (source) => {
                 if (aliases.includes(source)) {
                     tracker.data[slot].deathCount++;
@@ -73,9 +85,16 @@ function connectClient(slot: string) {
     }).then(_ => {
         console.log(`Connected to Slot ${slot}`);
         tracker.data[slot] = {
-            game: clients[slot].game,
-            collectedChecks: clients[slot].room.checkedLocations.map((id) => client.package.lookupLocationName(client.game, id)),
-            uncollectedChecks: clients[slot].room.missingLocations.map((id) => client.package.lookupLocationName(client.game, id)),
+            game: client.game,
+            collectedChecks: client.room.checkedLocations.map((id) => client.package.lookupLocationName(client.game, id)),
+            uncollectedChecks: client.room.missingLocations.map((id) => client.package.lookupLocationName(client.game, id)),
+            receivedItems: client.items.received.map(i => {
+                return {
+                    name: i.name,
+                    sender: i.sender.name,
+                    location: i.locationName
+                }
+            }),
             deathCount: 0,
         };
         sendUpdate();

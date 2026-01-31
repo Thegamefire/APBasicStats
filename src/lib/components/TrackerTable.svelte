@@ -10,7 +10,6 @@
             sortBy.col = col;
             sortBy.ascending = false;
         }
-        console.log(sortBy)
     }
 
     let slots = $derived(Object.keys(tracker).toSorted((a, b) => {
@@ -54,7 +53,7 @@
     <tbody>
     {#each slots as slot, i}
         <tr class=" {i%2===1? 'bg-violet-100 dark:bg-violet-500':'bg-violet-200/60 dark:bg-violet-500/95'}  dark:text-white">
-            <td class="py-1 px-1 pb-2">{slot}</td>
+            <td class="py-1 px-1 pb-2"><a href="/slot/{slot}">{slot}</a></td>
             <td>{tracker[slot].game}</td>
             <td>{tracker[slot].collectedChecksCount}/{tracker[slot].totalChecksCount}</td>
             <td>{getPercentage(slot).toFixed(2)}%</td>

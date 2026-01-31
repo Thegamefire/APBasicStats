@@ -21,8 +21,7 @@ export function GET({params}) {
             const unsubscribe = subscribe((tracker) => {
                 if (!closed) {
                     controller.enqueue(
-                        `data: ${JSON.stringify(getSlotData(tracker, slotName))
-                        }}))}\n\n`
+                        `data: ${JSON.stringify(getSlotData(tracker, slotName))}\n\n`
                     );
                 }
             });

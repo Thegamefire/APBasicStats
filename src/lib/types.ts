@@ -2,6 +2,7 @@ export type TrackedSlotData = {
     game: string,
     collectedChecks: string[],
     uncollectedChecks: string[],
+    receivedItems: PublicItem[],
     deathCount: number
 }
 
@@ -28,4 +29,10 @@ export type GeneralTrackerData = {
 export type SlotTrackerData = {
     logs: TrackerLogNode[][]
     data: TrackedSlotData
+}
+
+export type PublicItem = {
+    sender: string,
+    name: string,
+    location: string,
 }
