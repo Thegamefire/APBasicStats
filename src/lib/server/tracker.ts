@@ -23,10 +23,22 @@ function initTracker() {
 
             client.room.on('locationsChecked', (_) => {
                 if (tracker.data[slot]) {
-                    tracker.data[slot].collectedChecksCount = client.room.checkedLocations.length;
+                    tracker.data[slot].collectedChecks = client.room.checkedLocations.map((id) => client.package.lookupLocationName(client.game, id));
                     sendUpdate();
                 }
             });
+            client.items.on("itemsReceived", (items) => {
+                if (tracker.data[slot]) {
+                    tracker.data[slot].receivedItems.push(...items.map(i => {
+                        return {
+                            location: i.locationName,
+                            name: i.name,
+                            sender: i.sender.name
+                        }
+                    }));
+                    sendUpdate();
+                }
+            })
             client.deathLink.on('deathReceived', (source) => {
                 if (aliases.includes(source)) {
                     tracker.data[slot].deathCount++;
@@ -69,14 +81,21 @@ function connectClient(slot: string) {
     const client = clients[slot];
     client.login(config.ap_host, slot, "", {
         password: config.ap_pass,
-        tags: ["DeathLink", "Tracker", "APBasicStats"]
+        tags: ["DeathLink", "Tracker"]
     }).then(_ => {
         console.log(`Connected to Slot ${slot}`);
         tracker.data[slot] = {
             game: client.game,
-            collectedChecksCount: client.room.checkedLocations.length,
-            totalChecksCount: client.room.missingLocations.length + client.room.checkedLocations.length,
-            deathCount: (tracker.data[slot]?.deathCount) ? tracker.data[slot].deathCount : 0,
+            collectedChecks: client.room.checkedLocations.map((id) => client.package.lookupLocationName(client.game, id)),
+            uncollectedChecks: client.room.missingLocations.map((id) => client.package.lookupLocationName(client.game, id)),
+            receivedItems: client.items.received.map(i => {
+                return {
+                    name: i.name,
+                    sender: i.sender.name,
+                    location: i.locationName
+                }
+            }),
+            deathCount: 0,
         };
         sendUpdate();
     });
