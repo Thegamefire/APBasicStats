@@ -19,8 +19,7 @@ export function GET() {
             const unsubscribe = subscribe((tracker) => {
                 if (!closed) {
                     controller.enqueue(
-                        `data: ${JSON.stringify(getGeneralData(tracker))
-                        }}))}\n\n`
+                        `data: ${JSON.stringify(getGeneralData(tracker))}\n\n`
                     );
                 }
             });
