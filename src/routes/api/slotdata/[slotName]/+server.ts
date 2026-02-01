@@ -1,6 +1,7 @@
 import {subscribe, getTracker} from '$lib/server/tracker';
 import type {Tracker} from "$lib/types";
 import {error} from "@sveltejs/kit";
+import {clearInterval} from "node:timers";
 
 export function GET({params}) {
     const {slotName} = params;
@@ -26,8 +27,18 @@ export function GET({params}) {
                 }
             });
 
+            const ping = setInterval(() => {
+                if (!closed) {
+                    controller.enqueue(`: ping\n\n`);
+                }
+            }, 15000);
+
             // Cleanup on disconnect
-            return () => unsubscribe();
+            return () => {
+                closed = true;
+                clearInterval(ping);
+                unsubscribe();
+            };
         },
         cancel: _ => {
             closed = true;

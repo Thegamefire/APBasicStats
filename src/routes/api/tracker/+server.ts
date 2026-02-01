@@ -1,5 +1,6 @@
 import {subscribe, getTracker} from '$lib/server/tracker';
 import type {Tracker} from "$lib/types";
+import {clearInterval} from "node:timers";
 
 export function GET() {
 
@@ -24,8 +25,18 @@ export function GET() {
                 }
             });
 
+            const ping = setInterval(() => {
+                if (!closed) {
+                    controller.enqueue(`: ping\n\n`);
+                }
+            }, 15000);
+
             // Cleanup on disconnect
-            return () => unsubscribe();
+            return () => {
+                closed = true;
+                clearInterval(ping);
+                unsubscribe();
+            };
         },
         cancel: _ => {
             closed = true;
