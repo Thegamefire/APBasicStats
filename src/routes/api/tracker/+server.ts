@@ -6,6 +6,9 @@ export function GET() {
     let closed = false;
     const stream = new ReadableStream({
         start(controller) {
+            controller.enqueue(
+                `: connected\n\n`
+            );
             // Send current value immediately
             controller.enqueue(
                 `data: ${JSON.stringify(getGeneralData(getTracker()))}\n\n`
