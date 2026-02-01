@@ -59,7 +59,8 @@ function initTracker() {
         if (config.ap_slots.length > 0) {
             const log_client = clients[config.ap_slots[0][0]];
             log_client.messages.on("message", (_, nodes) => {
-                tracker.logs.push(nodes.map(serializeApMsg))
+                if (!nodes[0].text.includes("'APBasicStats'"))
+                    tracker.logs.push(nodes.map(serializeApMsg))
                 sendUpdate();
             });
             log_client.deathLink.on("deathReceived", (source, _, cause) => {
@@ -81,7 +82,7 @@ function connectClient(slot: string) {
     const client = clients[slot];
     client.login(config.ap_host, slot, "", {
         password: config.ap_pass,
-        tags: ["DeathLink", "Tracker"]
+        tags: ["DeathLink", "Tracker", "APBasicStats"]
     }).then(_ => {
         console.log(`Connected to Slot ${slot}`);
         tracker.data[slot] = {
