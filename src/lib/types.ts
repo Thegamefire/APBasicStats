@@ -7,7 +7,7 @@ export type TrackedSlotData = {
 }
 
 export type TrackerLogNode = {
-    type: "item" | "location" | "color" | "text" | "entrance" | "player",
+    type: "item" | "item-progression" | "location" | "color" | "text" | "entrance" | "player",
     text: string,
     color?: string;
 }

@@ -1,4 +1,4 @@
-import {Client, ColorMessageNode, type MessageNode} from "archipelago.js";
+import {Client, ColorMessageNode, ItemMessageNode, type MessageNode} from "archipelago.js";
 import type {Tracker, TrackerLogNode} from "$lib/types";
 import {building} from "$app/environment";
 import {getConfig, type Config} from "$lib/server/config";
@@ -119,7 +119,9 @@ export function subscribe(fn: (t: Tracker) => void) {
 
 function serializeApMsg(node: MessageNode): TrackerLogNode {
     return {
-        type: node.type,
+        type: (node instanceof ItemMessageNode) && node.item.progression
+            ? "item-progression"
+            : node.type,
         text: node.text,
         color: node instanceof ColorMessageNode ? node?.color : undefined,
     }

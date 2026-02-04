@@ -6,6 +6,8 @@
 
 {#if node.type === "item"}
     <span class="text-green-500 dark:text-green-300">{node.text}</span>
+{:else if node.type === "item-progression"}
+        <span class="text-green-700 dark:text-green-500">{node.text}</span>
 {:else if node.type === "player"}
     <span class="text-purple-500 dark:text-purple-300">{node.text}</span>
 {:else if node.type === "location"}
