@@ -5,11 +5,11 @@
 </script>
 
 {#if node.type === "item"}
-    <span class="dark:text-green-300">{node.text}</span>
+    <span class="text-green-500 dark:text-green-300">{node.text}</span>
 {:else if node.type === "player"}
     <span class="text-purple-500 dark:text-purple-300">{node.text}</span>
 {:else if node.type === "location"}
-    <span class="dark:text-orange-300">{node.text}</span>
+    <span class="text-orange-400 dark:text-orange-300">{node.text}</span>
 {:else if node.type === "color"}
     <span style="color: {node.color}">{node.text}</span>
 {:else}
