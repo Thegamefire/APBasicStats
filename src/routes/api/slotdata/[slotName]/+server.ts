@@ -1,58 +1,29 @@
-import {subscribe, getTracker} from '$lib/server/tracker';
-import type {Tracker} from "$lib/types";
 import {error} from "@sveltejs/kit";
-import {clearInterval} from "node:timers";
+import {produce} from "sveltekit-sse";
+import type {Tracker} from "$lib/types";
+import {getTracker, subscribe} from "$lib/server/tracker";
 
-export function GET({params}) {
+export const POST = async ({params}) => {
     const {slotName} = params;
     if (!getTracker().data[slotName]) {
         throw error(400, "Invalid Slot");
     }
-
-
-    let closed = false;
-    const stream = new ReadableStream({
-        start(controller) {
-            // Send current value immediately
-            controller.enqueue(
-                `data: ${JSON.stringify(getSlotData(getTracker(), slotName))}\n\n`
-            );
-
-            // Subscribe to future updates
-            const unsubscribe = subscribe((tracker) => {
-                if (!closed) {
-                    controller.enqueue(
-                        `data: ${JSON.stringify(getSlotData(tracker, slotName))}\n\n`
-                    );
-                }
-            });
-
-            const ping = setInterval(() => {
-                if (!closed) {
-                    controller.enqueue(`: ping\n\n`);
-                }
-            }, 15000);
-
-            // Cleanup on disconnect
-            return () => {
-                closed = true;
-                clearInterval(ping);
-                unsubscribe();
-            };
-        },
-        cancel: _ => {
-            closed = true;
+    return produce(async function start({emit}) {
+        const send = (tracker: Tracker) => {
+            const {error} = emit('message', JSON.stringify(getSlotData(tracker, slotName)));
+            if (error) {
+                return cancel()
+            }
         }
 
-    });
+        const cancel = () => {
 
-    return new Response(stream, {
-        headers: {
-            'Content-Type': 'text/event-stream',
-            'Cache-Control': 'no-cache',
-            Connection: 'keep-alive'
         }
-    });
+
+        subscribe(send);
+        send(getTracker());
+        return cancel();
+    })
 }
 
 
