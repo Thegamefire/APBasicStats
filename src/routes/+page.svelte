@@ -1,19 +1,19 @@
 <script lang="ts">
     import TrackerTable from "$lib/components/TrackerTable.svelte";
     import {onMount} from "svelte";
-    import type {GeneralTrackerData, Tracker} from '$lib/types';
+    import type {GeneralTrackerData} from '$lib/types';
     import APConsole from "$lib/components/APConsole.svelte";
+    import {source} from "sveltekit-sse";
 
     let tracker: GeneralTrackerData = $state({logs: [], data: {}});
 
     onMount(() => {
-        const source = new EventSource('/api/tracker');
+        const trackerSource = source("/api/tracker").select("message");
 
-        source.onmessage = (event) => {
-            tracker = JSON.parse(event.data);
-        };
-        return () => source.close();
-    });
+        trackerSource.subscribe((message: string) => {
+            tracker = JSON.parse(message);
+        })
+    })
 
     let consoleDiv: HTMLDivElement;
     const scrollToBottom = async (node: HTMLDivElement) => {

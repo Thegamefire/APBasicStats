@@ -3,6 +3,7 @@
     import type {SlotTrackerData} from "$lib/types";
     import ReceivedItemTable from "$lib/components/ReceivedItemTable.svelte";
     import LocationTable from "$lib/components/LocationTable.svelte";
+    import {source} from "sveltekit-sse";
 
     let {data} = $props()
     const slotName = $derived(data.slotName);
@@ -13,13 +14,12 @@
     });
 
     onMount(() => {
-        const source = new EventSource(`/api/slotdata/${slotName}`);
+        const trackerSource = source(`/api/slotdata/${slotName}`).select("message");
 
-        source.onmessage = (event) => {
-            tracker = JSON.parse(event.data);
-        };
-        return () => source.close();
-    });
+        trackerSource.subscribe((message: string) => {
+            tracker = JSON.parse(message);
+        });
+    })
 
     $inspect(tracker);
 </script>

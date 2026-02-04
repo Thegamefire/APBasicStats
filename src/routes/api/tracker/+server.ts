@@ -1,55 +1,24 @@
-import {subscribe, getTracker} from '$lib/server/tracker';
+import {produce} from "sveltekit-sse";
 import type {Tracker} from "$lib/types";
-import {clearInterval} from "node:timers";
+import {getTracker, subscribe} from "$lib/server/tracker";
 
-export function GET() {
-
-    let closed = false;
-    const stream = new ReadableStream({
-        start(controller) {
-            controller.enqueue(
-                `: connected\n\n`
-            );
-            // Send current value immediately
-            controller.enqueue(
-                `data: ${JSON.stringify(getGeneralData(getTracker()))}\n\n`
-            );
-
-            // Subscribe to future updates
-            const unsubscribe = subscribe((tracker) => {
-                if (!closed) {
-                    controller.enqueue(
-                        `data: ${JSON.stringify(getGeneralData(tracker))}\n\n`
-                    );
-                }
-            });
-
-            const ping = setInterval(() => {
-                if (!closed) {
-                    controller.enqueue(`: ping\n\n`);
-                }
-            }, 15000);
-
-            // Cleanup on disconnect
-            return () => {
-                closed = true;
-                clearInterval(ping);
-                unsubscribe();
-            };
-        },
-        cancel: _ => {
-            closed = true;
+export const POST = async () => {
+    return produce(async function start({emit}) {
+        const send = (tracker: Tracker) => {
+            const {error} = emit('message', JSON.stringify(getGeneralData(tracker)));
+            if (error) {
+                return cancel()
+            }
         }
 
-    });
+        const cancel = () => {
 
-    return new Response(stream, {
-        headers: {
-            'Content-Type': 'text/event-stream',
-            'Cache-Control': 'no-cache',
-            Connection: 'keep-alive'
         }
-    });
+
+        subscribe(send);
+        send(getTracker());
+        return cancel();
+    })
 }
 
 
