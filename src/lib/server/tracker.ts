@@ -24,6 +24,7 @@ function initTracker() {
             client.room.on('locationsChecked', (_) => {
                 if (tracker.data[slot]) {
                     tracker.data[slot].collectedChecks = client.room.checkedLocations.map((id) => client.package.lookupLocationName(client.game, id));
+                    tracker.data[slot].uncollectedChecks = client.room.missingLocations.map((id) => client.package.lookupLocationName(client.game, id));
                     sendUpdate();
                 }
             });
