@@ -17,19 +17,38 @@
     });
 
     onMount(() => {
-        const trackerSource = source(`/api/slotdata/${slotName}`).select("message");
+    const trackerSource = source(`/api/slotdata/${slotName}`).select("message");
 
-        trackerSource.subscribe((message: string) => {
-            tracker = JSON.parse(message);
-        });
+    trackerSource.subscribe((message: string) => {
+        tracker = JSON.parse(message);
+    });
     })
+
+    let tabs = $derived([
+     /*{ name: "Console", comp: APConsole, props: {logs: } },*/
+     { name: "Received Items", comp: ReceivedItemTable, props: {items: tracker.receivedItems}  },
+     { name: "Locations", comp: LocationTable, props: {
+             collectedChecks: tracker.checkedLocations,
+             uncollectedChecks: tracker.uncheckedLocations
+         }  },
+    ]);
+
+    let selectedTabIndex = $state(0);
+    let selectedTab = $derived(tabs[selectedTabIndex]);
 </script>
-<div class="w-full flex flex-col items-center max-h-4/5">
-    <div class="w-6/7 md:w-4/5 rounded-xl mb-6 max-h-2/5 overflow-scroll">
-        <ReceivedItemTable items={tracker.receivedItems}/>
-    </div>
-    <div class="w-6/7 md:w-4/5 rounded-xl max-h-4/6 overflow-scroll mb-6">
-        <LocationTable collectedChecks={tracker.checkedLocations}
-                       uncollectedChecks={tracker.uncheckedLocations}/>
+
+
+<div class="flex flex-col items-center max-h-4/6">
+
+    <div class="w-6/7 md:w-4/5 max-h-full">
+        <div class="w-full mb-2">
+            {#each tabs as tab, i}
+                <button onclick={() => selectedTabIndex = i} class="mx-2 px-4 py-1 rounded-full {selectedTabIndex===i?'bg-violet-200':'active:bg-gray-200 hover:bg-gray-100'}">{tab.name}</button>
+            {/each}
+        </div>
+        <div class="rounded-xl overflow-scroll max-h-full">
+            <selectedTab.comp {...selectedTab.props} />
+        </div>
     </div>
 </div>
+
