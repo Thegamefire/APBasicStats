@@ -24,3 +24,8 @@ vite.config.ts.timestamp-*
 
 .idea
 .vscode
+
+# personal
+config.yml
+**#**
+**~**
