@@ -40,6 +40,7 @@ export type PublicItem = {
 export type PublicHint = {
     reciever: string,
     sender : string,
-    name : string,
+    item : string,
     location : string,
+    progression: boolean
 }

@@ -7,20 +7,23 @@
   let hints = [
     {
     reciever : "Luniya",
-    name : "the thing",
+    item : "the thing",
     sender : "the sender",
     location : "the location",
+    progression: true,
     },
     {
     reciever : "meow",
-    name : "the thing",
+    item : "the thing",
     sender : "the sender",
     location : "the location",
+    progression: false,
     } , {
     reciever : "meow",
-    name : "the thing2",
+    item : "the thing2",
     sender : "the sender",
     location : "the location2",
+    progression: false,
   }
   ];
 </script>
