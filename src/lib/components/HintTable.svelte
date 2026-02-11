@@ -15,8 +15,8 @@
         switch (sortBy.col) {
             case "Receiver":
                 return a.reciever.localeCompare(b.reciever) * (sortBy.ascending ? 1 : -1);
-            case "Name":
-                return a.name.localeCompare(b.name) * (sortBy.ascending ? 1 : -1);
+            case "Item":
+                return a.item.localeCompare(b.item) * (sortBy.ascending ? 1 : -1);
             case "Location":
                 return a.location.localeCompare(b.location) * (sortBy.ascending ? 1 : -1);
             case "Sender":
@@ -37,7 +37,7 @@
 <table class="w-full md:text-lg lg:text-xl text-center">
     <thead>
     <tr>
-        {#each ["Name", "Location", "Receiver",  "Sender"] as header}
+        {#each ["Item", "Location", "Receiver",  "Sender"] as header}
             <th class="py-2 cursor-pointer bg-violet-200 dark:bg-violet-600 dark:text-white"
                 onclick={() => headerClicked(header)}>{header} {getSortIcon(header)}</th>
         {/each}
@@ -46,7 +46,7 @@
     <tbody>
     {#each hints as hint, i}
         <tr class=" {i%2===1? 'bg-violet-100 dark:bg-violet-500':'bg-violet-200/60 dark:bg-violet-500/95'}  dark:text-white">
-            <td>{hint.name}</td>
+            <td class="{hint.progression?'font-medium':''}">{hint.item}</td>
             <td>{hint.location}</td>
             <td>{hint.reciever}</td>
             <td>{hint.sender}</td>
