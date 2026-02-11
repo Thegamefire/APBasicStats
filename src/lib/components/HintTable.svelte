@@ -1,5 +1,5 @@
 <script lang="ts">
-    let {hintMap} = $props();
+    let {hints} = $props();
     let sortBy = $state({col: "Reciever", ascending: false})
   
     function headerClicked(col: string) {
@@ -11,14 +11,16 @@
         }
     }
 
-    let recievers = $derived(Object.keys(hintMap).toSorted((a, b) => {
+  let recievers = $derived(hints.toSorted((a, b) => {
         switch (sortBy.col) {
+            case "Reciever":
+                return a.reciever.localeCompare(b.reciever) * (sortBy.ascending ? 1 : -1);
             case "Name":
-                return hintMap[a].name.localeCompare(hintMap[b].name) * (sortBy.ascending ? 1 : -1);
+                return a.name.localeCompare(b.name) * (sortBy.ascending ? 1 : -1);
             case "Location":
-                return hintMap[a].location.localeCompare(hintMap[b].location) * (sortBy.ascending ? 1 : -1);
+                return a.location.localeCompare(b.location) * (sortBy.ascending ? 1 : -1);
             case "Sender":
-                return hintMap[a].sender.localeCompare(hintMap[b].sender) * (sortBy.ascending ? 1 : -1);
+                return a.sender.localeCompare(b.sender) * (sortBy.ascending ? 1 : -1);
             default:
                 return a.localeCompare(b) * (sortBy.ascending ? 1 : -1);
         }
@@ -44,10 +46,10 @@
     <tbody>
     {#each recievers as reciever, i}
         <tr class=" {i%2===1? 'bg-violet-100 dark:bg-violet-500':'bg-violet-200/60 dark:bg-violet-500/95'}  dark:text-white">
-            <td>{reciever}</td>
-            <td>{hintMap[reciever].name}</td>
-            <td>{hintMap[reciever].sender}</td>
-            <td>{hintMap[reciever].location}</td>
+            <td>{reciever.reciever}</td>
+            <td>{reciever.name}</td>
+            <td>{reciever.sender}</td>
+            <td>{reciever.location}</td>
         </tr>
     {/each}
     </tbody>

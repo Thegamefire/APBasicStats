@@ -37,10 +37,9 @@ export type PublicItem = {
     location: string,
 }
 
-export type PublicHintRecieverMap = {
-  [reciever : string] : {
-        sender : string,
-        name : string,
-        location : string,
-  }
+export type PublicHint = {
+    reciever: string,
+    sender : string,
+    name : string,
+    location : string,
 }
