@@ -37,7 +37,7 @@
 <table class="w-full md:text-lg lg:text-xl text-center">
     <thead>
     <tr>
-        {#each ["Receiver", "Name", "Sender", "Location"] as header}
+        {#each ["Name", "Location", "Receiver",  "Sender"] as header}
             <th class="py-2 cursor-pointer bg-violet-200 dark:bg-violet-600 dark:text-white"
                 onclick={() => headerClicked(header)}>{header} {getSortIcon(header)}</th>
         {/each}
@@ -46,10 +46,10 @@
     <tbody>
     {#each hints as hint, i}
         <tr class=" {i%2===1? 'bg-violet-100 dark:bg-violet-500':'bg-violet-200/60 dark:bg-violet-500/95'}  dark:text-white">
-            <td>{hint.reciever}</td>
             <td>{hint.name}</td>
-            <td>{hint.sender}</td>
             <td>{hint.location}</td>
+            <td>{hint.reciever}</td>
+            <td>{hint.sender}</td>
         </tr>
     {/each}
     </tbody>
