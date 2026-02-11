@@ -1,6 +1,6 @@
 <script lang="ts">
     let {hints} = $props();
-    let sortBy = $state({col: "Reciever", ascending: false})
+    let sortBy = $state({col: "Receiver", ascending: false})
   
     function headerClicked(col: string) {
         if (sortBy.col == col) {
@@ -13,7 +13,7 @@
 
   let recievers = $derived(hints.toSorted((a, b) => {
         switch (sortBy.col) {
-            case "Reciever":
+            case "Receiver":
                 return a.reciever.localeCompare(b.reciever) * (sortBy.ascending ? 1 : -1);
             case "Name":
                 return a.name.localeCompare(b.name) * (sortBy.ascending ? 1 : -1);
@@ -37,19 +37,19 @@
 <table class="w-full md:text-lg lg:text-xl text-center">
     <thead>
     <tr>
-        {#each ["Reciever", "Name", "Sender", "Location"] as header}
+        {#each ["Receiver", "Name", "Sender", "Location"] as header}
             <th class="py-2 cursor-pointer bg-violet-200 dark:bg-violet-600 dark:text-white"
                 onclick={() => headerClicked(header)}>{header} {getSortIcon(header)}</th>
         {/each}
     </tr>
     </thead>
     <tbody>
-    {#each recievers as reciever, i}
+    {#each hints as hint, i}
         <tr class=" {i%2===1? 'bg-violet-100 dark:bg-violet-500':'bg-violet-200/60 dark:bg-violet-500/95'}  dark:text-white">
-            <td>{reciever.reciever}</td>
-            <td>{reciever.name}</td>
-            <td>{reciever.sender}</td>
-            <td>{reciever.location}</td>
+            <td>{hint.reciever}</td>
+            <td>{hint.name}</td>
+            <td>{hint.sender}</td>
+            <td>{hint.location}</td>
         </tr>
     {/each}
     </tbody>
