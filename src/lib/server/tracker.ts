@@ -1,133 +1,125 @@
-import {Client, ColorMessageNode, ItemMessageNode, type MessageNode} from "archipelago.js";
-import type {Tracker, TrackerLogNode} from "$lib/types";
-import {building} from "$app/environment";
-import {getConfig, type Config} from "$lib/server/config";
+import { EventEmitter } from "node:events";
+import {type Config, getConfig} from "$lib/server/config";
+import {ClientManager} from "$lib/server/archipelago";
+import {ColorMessageNode as ApColorMessageNode, type Hint as ApHint, ItemMessageNode as ApItemMessageNode, type MessageNode as ApMessageNode} from "archipelago.js"
 
-let config: Config;
+class Tracker extends EventEmitter {
+    private config: Config;
+    private readonly clients: { [slot: string]: ClientManager};
 
-if (!building) {
-    config = await getConfig();
-}
+    private readonly logs: LogNode[][];
+    private readonly hints: Hint[];
 
-const tracker: Tracker = {
-    logs: [],
-    data: {}
-}
-const clients: { [slot: string]: Client } = {};
+    constructor(config: Config) {
+        super();
+        this.config = config;
+        this.logs = [];
+        this.hints = [];
+        this.clients = {};
 
-function initTracker() {
-    try {
-        for (let aliases of config.ap_slots) {
-            const slot = aliases[0]
-            const client = new Client();
-
-            client.room.on('locationsChecked', (_) => {
-                if (tracker.data[slot]) {
-                    tracker.data[slot].collectedChecks = client.room.checkedLocations.map((id) => client.package.lookupLocationName(client.game, id));
-                    tracker.data[slot].uncollectedChecks = client.room.missingLocations.map((id) => client.package.lookupLocationName(client.game, id));
-                    sendUpdate();
-                }
-            });
-            client.items.on("itemsReceived", (items) => {
-                if (tracker.data[slot]) {
-                    tracker.data[slot].receivedItems.push(...items.map(i => {
-                        return {
-                            location: i.locationName,
-                            name: i.name,
-                            sender: i.sender.name
-                        }
-                    }));
-                    sendUpdate();
-                }
-            })
-            client.deathLink.on('deathReceived', (source) => {
-                if (aliases.includes(source)) {
-                    tracker.data[slot].deathCount++;
-                    sendUpdate();
-                }
-            })
-            client.socket.on("disconnected", () => {
-                console.log(`Disconnected Slot ${slot}, Trying Reconnect in 5 sec`);
-                setTimeout(() => {
-                    console.log(`Trying to Reconnect to Slot ${slot}`);
-                    connectClient(slot);
-                }, 5000);
-            })
-
-            clients[slot] = client;
-            connectClient(slot)
+        for (let slot of this.config.ap_slots) {
+            const client = new ClientManager(slot)
+            this.clients[slot[0]] = client;
+            client.on("update", ()=> this.sendUpdate(slot[0]))
+            client.connect();
         }
-        if (config.ap_slots.length > 0) {
-            const log_client = clients[config.ap_slots[0][0]];
-            log_client.messages.on("message", (_, nodes) => {
-                if (!nodes[0].text.includes("'APBasicStats'"))
-                    tracker.logs.push(nodes.map(serializeApMsg))
-                sendUpdate();
-            });
-            log_client.deathLink.on("deathReceived", (source, _, cause) => {
-                tracker.logs.push([
-                    {type: "player", text: source},
-                    {type: "color", text: " died", color: "red"},
-                    {type: "text", text: cause ? ": " + cause : ""},
-                ]);
-                sendUpdate();
-            })
+        const mainClient = this.clients[this.config.ap_slots[0][0]];
+        mainClient.client.items.on("hintReceived", this.onHint);
+        mainClient.client.messages.on("message", this.onMessage);
+    }
+
+    onHint = (hint: ApHint) => {
+        this.hints.push({
+            item: hint.item.name,
+            location: hint.item.locationName,
+            receiver: hint.item.receiver.name,
+            sender: hint.item.sender.name,
+            progression: hint.item.progression,
+        })
+    }
+
+    onMessage = (text: string, nodes: ApMessageNode[]) => {
+        if (!Tracker.shouldIgnoreMessage(nodes)) {
+            this.logs.push(nodes.map(Tracker.convertMessageNode))
         }
-    } catch (e) {
-        console.log(e)
-        console.error("AP_SLOTS environment variable is formatted incorrectly!");
+    }
+
+    static shouldIgnoreMessage(nodes: ApMessageNode[]) {
+        return nodes.some((n) => n.text.includes("'APBasicStats'"));
+    }
+
+    static convertMessageNode(node: ApMessageNode): LogNode {
+        return {
+            type: (node instanceof ApItemMessageNode) && node.item.progression
+                ? "item-progression"
+                : node.type,
+            text: node.text,
+            color: node instanceof ApColorMessageNode ? node?.color : undefined,
+        }
+    }
+
+    sendUpdate = (slot?: string)=> {
+        if (slot) {
+            this.emit(`updateSlot${slot}`, this.clients[slot].getSlotData());
+        }
+        this.emit("updateGeneral", this.getGeneralData());
+    }
+
+    getGeneralData = (): GeneralData => {
+        let slotData: {[slot: string]: GeneralSlotData} = {};
+        for (let slot in this.clients) {
+            const fullData = this.clients[slot].getSlotData();
+            slotData[slot] = {
+                game: fullData.game,
+                collectedChecksCount: fullData.checkedLocations.length,
+                totalChecksCount: fullData.uncheckedLocations.length + fullData.checkedLocations.length,
+                deathCount: fullData.deathCount
+            }
+        }
+        return {
+            logs: this.logs,
+            hints: this.hints,
+            slotData: slotData,
+        }
+
+    }
+    getSlotSpecificData = (slot: string) => {
+        return this.clients[slot].getSlotData();
+    }
+
+    hasSlot = (slot: string) => {
+        return Object.keys(this.clients).includes(slot);
     }
 }
 
-function connectClient(slot: string) {
-    const client = clients[slot];
-    client.login(config.ap_host, slot, "", {
-        password: config.ap_pass,
-        tags: ["DeathLink", "Tracker", "APBasicStats"]
-    }).then(_ => {
-        console.log(`Connected to Slot ${slot}`);
-        tracker.data[slot] = {
-            game: client.game,
-            collectedChecks: client.room.checkedLocations.map((id) => client.package.lookupLocationName(client.game, id)),
-            uncollectedChecks: client.room.missingLocations.map((id) => client.package.lookupLocationName(client.game, id)),
-            receivedItems: client.items.received.map(i => {
-                return {
-                    name: i.name,
-                    sender: i.sender.name,
-                    location: i.locationName
-                }
-            }),
-            deathCount: 0,
-        };
-        sendUpdate();
-    });
+
+
+const config = await getConfig();
+export const tracker = new Tracker(config);
+
+
+export type GeneralData = {
+    logs: LogNode[][];
+    hints: Hint[];
+    slotData: {[slot: string]: GeneralSlotData };
 }
 
-export function getTracker(): Tracker {
-    return tracker;
+export type GeneralSlotData = {
+    game: string,
+    collectedChecksCount: number,
+    totalChecksCount: number,
+    deathCount: number
 }
 
-const listeners = new Set<(t: Tracker) => void>();
-
-function sendUpdate() {
-    listeners.forEach((l) => l(tracker));
+export type Hint = {
+    item: string,
+    location: string,
+    receiver: string,
+    sender: string,
+    progression: boolean,
 }
-
-export function subscribe(fn: (t: Tracker) => void) {
-    listeners.add(fn);
-    return () => listeners.delete(fn);
-}
-
-function serializeApMsg(node: MessageNode): TrackerLogNode {
-    return {
-        type: (node instanceof ItemMessageNode) && node.item.progression
-            ? "item-progression"
-            : node.type,
-        text: node.text,
-        color: node instanceof ColorMessageNode ? node?.color : undefined,
-    }
-}
-
-if (!building) {
-    initTracker();
+export type LogNode = {
+    type: "item" | "item-progression" | "location" | "color" | "text" | "entrance" | "player",
+    text: string,
+    color?: string;
 }
