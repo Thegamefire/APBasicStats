@@ -1,5 +1,6 @@
 <script lang="ts">
     import {onMount} from "svelte";
+    import type {SlotTrackerData} from "$lib/types";
     import ReceivedItemTable from "$lib/components/ReceivedItemTable.svelte";
     import LocationTable from "$lib/components/LocationTable.svelte";
     import {source} from "sveltekit-sse";
@@ -14,7 +15,8 @@
         checkedLocations: [],
         uncheckedLocations: [],
         receivedItems: [],
-        deathCount: 0
+        deathCount: 0,
+        hints: []
     });
 
     onMount(() => {
@@ -40,8 +42,6 @@
 
     let selectedTabIndex = $state(0);
     let selectedTab = $derived(tabs[selectedTabIndex]);
-
-    $inspect(tracker.hints);
 </script>
 
 
