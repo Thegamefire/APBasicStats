@@ -11,7 +11,7 @@
         }
     }
 
-  let recievers = $derived(hints.toSorted((a, b) => {
+  let sortedHints = $derived(hints.toSorted((a, b) => {
         switch (sortBy.col) {
             case "Receiver":
                 return a.reciever.localeCompare(b.reciever) * (sortBy.ascending ? 1 : -1);
@@ -44,7 +44,7 @@
     </tr>
     </thead>
     <tbody>
-    {#each hints as hint, i}
+    {#each sortedHints as hint, i}
         <tr class=" {i%2===1? 'bg-violet-100 dark:bg-violet-500':'bg-violet-200/60 dark:bg-violet-500/95'}  dark:text-white">
             <td class="{hint.progression?'font-medium':''}">{hint.item}</td>
             <td>{hint.location}</td>
