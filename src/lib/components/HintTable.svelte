@@ -1,4 +1,6 @@
 <script lang="ts">
+    import type {Hint} from "$lib/server/tracker";
+
     let {hints} = $props();
     let sortBy = $state({col: "Receiver", ascending: false})
   
@@ -11,10 +13,10 @@
         }
     }
 
-  let sortedHints = $derived(hints.toSorted((a, b) => {
+  let sortedHints = $derived(hints.toSorted((a: Hint, b: Hint) => {
         switch (sortBy.col) {
             case "Receiver":
-                return a.reciever.localeCompare(b.reciever) * (sortBy.ascending ? 1 : -1);
+                return a.receiver.localeCompare(b.receiver) * (sortBy.ascending ? 1 : -1);
             case "Item":
                 return a.item.localeCompare(b.item) * (sortBy.ascending ? 1 : -1);
             case "Location":
@@ -22,7 +24,7 @@
             case "Sender":
                 return a.sender.localeCompare(b.sender) * (sortBy.ascending ? 1 : -1);
             default:
-                return a.localeCompare(b) * (sortBy.ascending ? 1 : -1);
+                return a.item.localeCompare(b.item) * (sortBy.ascending ? 1 : -1);
         }
     }))
 
@@ -48,7 +50,7 @@
         <tr class=" {i%2===1? 'bg-violet-100 dark:bg-violet-500':'bg-violet-200/60 dark:bg-violet-500/95'}  dark:text-white">
             <td class="{hint.progression?'font-medium':''}">{hint.item}</td>
             <td>{hint.location}</td>
-            <td>{hint.reciever}</td>
+            <td>{hint.receiver}</td>
             <td>{hint.sender}</td>
         </tr>
     {/each}

@@ -23,8 +23,6 @@
             tracker = JSON.parse(message);
         });
     })
-
-    $inspect(tracker);
 </script>
 <div class="w-full flex flex-col items-center max-h-4/5">
     <div class="w-6/7 md:w-4/5 rounded-xl mb-6 max-h-2/5 overflow-scroll">
