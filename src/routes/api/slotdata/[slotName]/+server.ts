@@ -1,16 +1,16 @@
 import {error} from "@sveltejs/kit";
 import {produce} from "sveltekit-sse";
-import type {Tracker} from "$lib/types";
-import {getTracker, subscribe} from "$lib/server/tracker";
+import type {SlotData} from "$lib/server/archipelago";
+import {tracker} from "$lib/server/tracker";
 
 export const POST = async ({params}) => {
     const {slotName} = params;
-    if (!getTracker().data[slotName]) {
+    if (!tracker.hasSlot(slotName)) {
         throw error(400, "Invalid Slot");
     }
     return produce(async function start({emit}) {
-        const send = (tracker: Tracker) => {
-            const {error} = emit('message', JSON.stringify(getSlotData(tracker, slotName)));
+        const send = (data: SlotData) => {
+            const {error} = emit('message', JSON.stringify(data));
             if (error) {
                 return cancel()
             }
@@ -20,16 +20,8 @@ export const POST = async ({params}) => {
 
         }
 
-        subscribe(send);
-        send(getTracker());
+        tracker.on(`updateSlot${slotName}`, send)
+        send(tracker.getSlotSpecificData(slotName));
         return cancel();
     })
-}
-
-
-function getSlotData(tracker: Tracker, slot: string) {
-    return {
-        logs: tracker.logs,
-        data: tracker.data[slot],
-    }
 }
