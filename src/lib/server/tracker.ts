@@ -26,6 +26,7 @@ class Tracker extends EventEmitter {
         const mainClient = this.clients[this.config.ap_slots[0][0]];
         mainClient.client.items.on("hintReceived", this.onHint);
         mainClient.client.messages.on("message", this.onMessage);
+        mainClient.client.deathLink.on("deathReceived", this.logDeath);
     }
 
     onHint = (hint: ApHint) => {
@@ -42,6 +43,15 @@ class Tracker extends EventEmitter {
         if (!Tracker.shouldIgnoreMessage(nodes)) {
             this.logs.push(nodes.map(Tracker.convertMessageNode))
         }
+    }
+
+    logDeath = (source: string, time: number, cause?: string | undefined) => {
+        this.logs.push([
+            {type: "player", text: source},
+            {type: "color", text: " died", color: "red"},
+            {type: "text", text: cause ? ": " + cause : ""},
+        ]);
+        this.sendUpdate();
     }
 
     static shouldIgnoreMessage(nodes: ApMessageNode[]) {
