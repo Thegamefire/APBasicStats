@@ -25,8 +25,6 @@
         scrollToBottom(consoleDiv)
     });
     onMount(() => scrollToBottom(consoleDiv));
-
-    $inspect(tracker.logs)
 </script>
 
 

@@ -8,13 +8,12 @@ class Tracker extends EventEmitter {
     private readonly clients: { [slot: string]: ClientManager};
 
     private readonly logs: LogNode[][];
-    private readonly hints: Hint[];
+    private readonly mainClient: ClientManager;
 
     constructor(config: Config) {
         super();
         this.config = config;
         this.logs = [];
-        this.hints = [];
         this.clients = {};
 
         for (let slot of this.config.ap_slots) {
@@ -23,20 +22,10 @@ class Tracker extends EventEmitter {
             client.on("update", ()=> this.sendUpdate(slot[0]))
             client.connect();
         }
-        const mainClient = this.clients[this.config.ap_slots[0][0]];
-        mainClient.client.items.on("hintReceived", this.onHint);
-        mainClient.client.messages.on("message", this.onMessage);
-        mainClient.client.deathLink.on("deathReceived", this.logDeath);
-    }
-
-    onHint = (hint: ApHint) => {
-        this.hints.push({
-            item: hint.item.name,
-            location: hint.item.locationName,
-            receiver: hint.item.receiver.name,
-            sender: hint.item.sender.name,
-            progression: hint.item.progression,
-        })
+        this.mainClient = this.clients[this.config.ap_slots[0][0]];
+        this.mainClient.client.items.on("hintReceived", () => this.sendUpdate);
+        this.mainClient.client.messages.on("message", this.onMessage);
+        this.mainClient.client.deathLink.on("deathReceived", this.logDeath);
     }
 
     onMessage = (text: string, nodes: ApMessageNode[]) => {
@@ -68,6 +57,16 @@ class Tracker extends EventEmitter {
         }
     }
 
+    static convertHint(hint: ApHint): Hint {
+        return {
+            item: hint.item.name,
+            location: hint.item.locationName,
+            receiver: hint.item.receiver.name,
+            sender: hint.item.sender.name,
+            progression: hint.item.progression,
+        }
+    }
+
     sendUpdate = (slot?: string)=> {
         if (slot) {
             this.emit(`updateSlot${slot}`, this.clients[slot].getSlotData());
@@ -88,7 +87,7 @@ class Tracker extends EventEmitter {
         }
         return {
             logs: this.logs,
-            hints: this.hints,
+            hints: this.mainClient.client.items.hints.map(Tracker.convertHint),
             slotData: slotData,
         }
 

@@ -1,0 +1,58 @@
+<script lang="ts">
+    import type {Hint} from "$lib/server/tracker";
+
+    let {hints} = $props();
+    let sortBy = $state({col: "Receiver", ascending: false})
+  
+    function headerClicked(col: string) {
+        if (sortBy.col == col) {
+            sortBy.ascending = !sortBy.ascending;
+        } else {
+            sortBy.col = col;
+            sortBy.ascending = false;
+        }
+    }
+
+  let sortedHints = $derived(hints.toSorted((a: Hint, b: Hint) => {
+        switch (sortBy.col) {
+            case "Receiver":
+                return a.receiver.localeCompare(b.receiver) * (sortBy.ascending ? 1 : -1);
+            case "Item":
+                return a.item.localeCompare(b.item) * (sortBy.ascending ? 1 : -1);
+            case "Location":
+                return a.location.localeCompare(b.location) * (sortBy.ascending ? 1 : -1);
+            case "Sender":
+                return a.sender.localeCompare(b.sender) * (sortBy.ascending ? 1 : -1);
+            default:
+                return a.item.localeCompare(b.item) * (sortBy.ascending ? 1 : -1);
+        }
+    }))
+
+    function getSortIcon(header: string) {
+        if (header == sortBy.col) {
+            return sortBy.ascending ? '▲' : '▼';
+        }
+        return " ";
+    }
+</script>
+
+<table class="w-full md:text-lg lg:text-xl text-center">
+    <thead>
+    <tr>
+        {#each ["Item", "Location", "Receiver",  "Sender"] as header}
+            <th class="py-2 cursor-pointer bg-violet-200 dark:bg-violet-600 dark:text-white"
+                onclick={() => headerClicked(header)}>{header} {getSortIcon(header)}</th>
+        {/each}
+    </tr>
+    </thead>
+    <tbody>
+    {#each sortedHints as hint, i}
+        <tr class=" {i%2===1? 'bg-violet-100 dark:bg-violet-500':'bg-violet-200/60 dark:bg-violet-500/95'}  dark:text-white">
+            <td class="{hint.progression?'font-medium':''}">{hint.item}</td>
+            <td>{hint.location}</td>
+            <td>{hint.receiver}</td>
+            <td class="py-1 px-2">{hint.sender}</td>
+        </tr>
+    {/each}
+    </tbody>
+</table>
