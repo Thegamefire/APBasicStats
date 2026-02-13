@@ -51,7 +51,7 @@
             <td class="{hint.progression?'font-medium':''}">{hint.item}</td>
             <td>{hint.location}</td>
             <td>{hint.receiver}</td>
-            <td>{hint.sender}</td>
+            <td class="py-1 px-2">{hint.sender}</td>
         </tr>
     {/each}
     </tbody>
