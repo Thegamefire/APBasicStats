@@ -4,6 +4,7 @@
     import LocationTable from "$lib/components/LocationTable.svelte";
     import {source} from "sveltekit-sse";
     import type {SlotData} from "$lib/server/archipelago";
+    import HintTable from "$lib/components/HintTable.svelte";
 
     let {data} = $props()
     const slotName = $derived(data.slotName);
@@ -30,11 +31,17 @@
      { name: "Locations", comp: LocationTable, props: {
              collectedChecks: tracker.checkedLocations,
              uncollectedChecks: tracker.uncheckedLocations
-         }  },
+            }
+        },
+    { name: "Hints", comp: HintTable, props: {
+            hints: tracker.hints
+        }}
     ]);
 
     let selectedTabIndex = $state(0);
     let selectedTab = $derived(tabs[selectedTabIndex]);
+
+    $inspect(tracker.hints);
 </script>
 
 

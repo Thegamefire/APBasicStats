@@ -3,7 +3,7 @@ import {type Config, getConfig} from "$lib/server/config";
 import {ClientManager} from "$lib/server/archipelago";
 import {ColorMessageNode as ApColorMessageNode, type Hint as ApHint, ItemMessageNode as ApItemMessageNode, type MessageNode as ApMessageNode} from "archipelago.js"
 
-class Tracker extends EventEmitter {
+export class Tracker extends EventEmitter {
     private config: Config;
     private readonly clients: { [slot: string]: ClientManager};
 
