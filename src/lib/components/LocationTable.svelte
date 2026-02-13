@@ -2,17 +2,18 @@
     const compareFn = (a: any, b: any) => {
         switch (sortBy.col) {
             case "Collected":
-                return (collectedChecks.includes(a) === collectedChecks.includes(b)
-                        ? (b.localeCompare(a))
-                        : (Number(collectedChecks.includes(a)) - Number(collectedChecks.includes(b)))
+                return (a.collected === b.collected
+                        ? (b.location.localeCompare(a.location))
+                        : (Number(a.collected) - Number(b.collected))
                 ) * (sortBy.ascending ? 1 : -1);
             default:
-                return (a.localeCompare(b)) * (sortBy.ascending ? 1 : -1);
+                return (a.location.localeCompare(b.location)) * (sortBy.ascending ? 1 : -1);
         }
     }
 
     let {collectedChecks, uncollectedChecks} = $props();
-    let sorted = $derived(collectedChecks.concat(uncollectedChecks).toSorted(compareFn));
+    let fullList = $derived(collectedChecks.map((loc:string) => {return {location: loc, collected: true}}).concat(uncollectedChecks.map((loc:string) => {return {location: loc, collected: false}})))
+    let sorted = $derived(fullList.toSorted(compareFn));
 
     let sortBy = $state({col: "Collected", ascending: false})
 
@@ -46,8 +47,8 @@
     <tbody>
     {#each sorted as location, i}
         <tr class=" {i%2===1? 'bg-violet-100 dark:bg-violet-500':'bg-violet-200/60 dark:bg-violet-500/95'}  dark:text-white">
-            <td>{location}</td>
-            <td>{collectedChecks.includes(location) ? "✔️" : ""}</td>
+            <td>{location.location}</td>
+            <td>{location.collected ? "✔️" : ""}</td>
         </tr>
     {/each}
     </tbody>
