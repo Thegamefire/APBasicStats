@@ -1,9 +1,10 @@
 <script lang="ts">
-    import TrackerTable from "$lib/components/TrackerTable.svelte";
     import {onMount} from "svelte";
-    import APConsole from "$lib/components/APConsole.svelte";
     import {source} from "sveltekit-sse";
     import type {GeneralData} from "$lib/server/tracker";
+    import HintTable from "$lib/components/HintTable.svelte";
+    import ConsoleTab from "$lib/components/ConsoleTab.svelte";
+    import OverviewTab from "$lib/components/OverviewTab.svelte";
 
     let tracker: GeneralData = $state({logs: [], hints: [], slotData: {}});
 
@@ -15,27 +16,28 @@
         })
     })
 
-    let consoleDiv: HTMLDivElement;
-    const scrollToBottom = async (node: HTMLDivElement) => {
-        node.scroll({top: node.scrollHeight, behavior: 'smooth'});
-    };
+    let tabs = $derived([
+        { name: "Overview", comp: OverviewTab, props: {tracker: tracker}  },
+        { name: "Console", comp: ConsoleTab, props: { logs: tracker.logs}},
+        { name: "Hints", comp: HintTable, props: {
+                hints: tracker.hints
+            }}
+    ]);
 
-    $effect(() => {
-        tracker;
-        scrollToBottom(consoleDiv)
-    });
-    onMount(() => scrollToBottom(consoleDiv));
+    let selectedTabIndex = $state(0);
+    let selectedTab = $derived(tabs[selectedTabIndex]);
 </script>
 
 
 <div class="w-full flex flex-col items-center">
-    <div class="w-6/7 md:w-4/5 rounded-xl overflow-hidden mb-6">
-        <TrackerTable tracker={tracker.slotData}/>
-    </div>
-
-    <div bind:this={consoleDiv}
-         class="w-6/7  md:w-4/5 overflow-scroll rounded-lg  px-4 py-2 border-3  border-gray-800 dark:border-gray-100"
-         style="max-height: 55vh;">
-        <APConsole logs={tracker.logs}/>
+    <div class="w-6/7 md:w-4/5 max-h-full">
+        <div class="w-full mb-2">
+            {#each tabs as tab, i}
+                <button onclick={() => selectedTabIndex = i} class="mx-2 px-4 py-1 rounded-full {selectedTabIndex===i?'bg-violet-200':'active:bg-gray-200 hover:bg-gray-100'}">{tab.name}</button>
+            {/each}
+        </div>
+        <div class="rounded-xl overflow-scroll max-h-full w-full">
+            <selectedTab.comp {...selectedTab.props} />
+        </div>
     </div>
 </div>

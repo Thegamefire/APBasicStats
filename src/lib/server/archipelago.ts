@@ -1,7 +1,9 @@
-import {Client, Item as ApItem} from "archipelago.js";
+import {Client, Hint as ApHint, Item as ApItem} from "archipelago.js";
 import {type Config, getConfig} from "$lib/server/config";
 import {building} from "$app/environment";
 import EventEmitter from "node:events";
+import {type Hint, Tracker} from "$lib/server/tracker"
+import {send} from "vite";
 let config: Config;
 
 if (!building) {
@@ -70,15 +72,20 @@ export class ClientManager extends EventEmitter{
     }
 
     getSlotData = (): SlotData => {
+        let hints = this.client.items.hints.filter(this.isOwnHint).map(Tracker.convertHint);
         return {
             receivedItems: this.client.items.received.map(ClientManager.convertApItem),
             checkedLocations: this.client.room.checkedLocations.map(this.locationIdToName),
             uncheckedLocations: this.client.room.missingLocations.map(this.locationIdToName),
             deathCount: this.deathCount,
             game: this.client.game,
+            hints: hints
         }
     }
 
+    isOwnHint = (hint: ApHint) => {
+        return hint.item.receiver.name === this.slot || hint.item.sender.name === this.slot;
+    }
     static convertApItem(item: ApItem): Item {
         return {
             sender: item.sender.name,
@@ -99,6 +106,7 @@ export type SlotData = {
     uncheckedLocations: string[];
     deathCount: number;
     game: string;
+    hints: Hint[]
 }
 
 export type Item = {
