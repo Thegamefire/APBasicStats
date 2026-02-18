@@ -2,6 +2,7 @@ import { EventEmitter } from "node:events";
 import {type Config, getConfig} from "$lib/server/config";
 import {ClientManager} from "$lib/server/archipelago";
 import {ColorMessageNode as ApColorMessageNode, type Hint as ApHint, ItemMessageNode as ApItemMessageNode, type MessageNode as ApMessageNode} from "archipelago.js"
+import {building} from "$app/environment";
 
 export class Tracker extends EventEmitter {
     private config: Config;
@@ -101,11 +102,11 @@ export class Tracker extends EventEmitter {
     }
 }
 
-
-
-const config = await getConfig();
-export const tracker = new Tracker(config);
-
+export let tracker: Tracker;
+if (!building) {
+    const config = await getConfig();
+     tracker = new Tracker(config);
+}
 
 export type GeneralData = {
     logs: LogNode[][];
