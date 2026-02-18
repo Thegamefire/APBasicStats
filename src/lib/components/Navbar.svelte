@@ -5,7 +5,4 @@
     <a class="font-black text-white text-4xl pl-3" href="/">
       AP Basic Stats
     </a>
-    <a class="font-black text-white text-xl pl-8 pb-0 underline" href="/hints">
-      Global Hints
-    </a>
 </div>

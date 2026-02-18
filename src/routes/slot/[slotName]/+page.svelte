@@ -1,6 +1,5 @@
 <script lang="ts">
     import {onMount} from "svelte";
-    import type {SlotTrackerData} from "$lib/types";
     import ReceivedItemTable from "$lib/components/ReceivedItemTable.svelte";
     import LocationTable from "$lib/components/LocationTable.svelte";
     import {source} from "sveltekit-sse";
@@ -28,7 +27,6 @@
     })
 
     let tabs = $derived([
-     /*{ name: "Console", comp: APConsole, props: {logs: } },*/
      { name: "Received Items", comp: ReceivedItemTable, props: {items: tracker.receivedItems}  },
      { name: "Locations", comp: LocationTable, props: {
              collectedChecks: tracker.checkedLocations,
