@@ -1,9 +1,15 @@
-import {Client, Hint as ApHint, Item as ApItem} from "archipelago.js";
+import {
+    Client,
+    type GetPacket,
+    Hint as ApHint,
+    Item as ApItem,
+    type RetrievedPacket,
+    type SetPacket
+} from "archipelago.js";
 import {type Config, getConfig} from "$lib/server/config";
 import {building} from "$app/environment";
 import EventEmitter from "node:events";
 import {type Hint, Tracker} from "$lib/server/tracker"
-import {send} from "vite";
 let config: Config;
 
 if (!building) {
@@ -28,6 +34,7 @@ export class ClientManager extends EventEmitter{
         this.client.deathLink.on("deathReceived", this.onDeath);
         this.client.room.on('locationsChecked', this.sendUpdate);
         this.client.items.on("itemsReceived", this.sendUpdate);
+        this.client.socket.on("retrieved", this.onRetrieved)
 
     }
 
@@ -53,6 +60,7 @@ export class ClientManager extends EventEmitter{
 
     onConnected = () => {
         console.log(`[AP] Connected to Slot ${this.slot}`);
+        this.fetchDeathCount();
     }
 
     onDisconnect = () => {
@@ -64,6 +72,20 @@ export class ClientManager extends EventEmitter{
         if (this.aliases.includes(source)) {
             this.deathCount++;
             this.sendUpdate();
+            this.saveDeathCount();
+        }
+    }
+
+    onRetrieved = (packet: RetrievedPacket) => {
+        if (`${this.slot}_deathcount` in packet.keys) {
+            const deathCount: number | null = packet.keys[`${this.slot}_deathcount`] as number | null;
+            if (deathCount != null) {
+                const oldDeathCount = this.deathCount;
+                this.deathCount = deathCount;
+                if (oldDeathCount !== this.deathCount) {
+                    this.sendUpdate();
+                }
+            }
         }
     }
 
@@ -97,6 +119,30 @@ export class ClientManager extends EventEmitter{
 
     locationIdToName = (location: number) => {
         return this.client.package.lookupLocationName(this.client.game, location)
+    }
+
+    saveDeathCount = () => {
+        const deathSavePacket: SetPacket = {
+            cmd: "Set",
+            default: 0,
+            key: `${this.slot}_deathcount`,
+            operations: [
+                {
+                    operation: "replace",
+                    value: this.deathCount,
+                }
+            ],
+            want_reply: false,
+        };
+        this.client.socket.send(deathSavePacket);
+    }
+
+    fetchDeathCount = () => {
+        const deathLoadPacket: GetPacket = {
+            cmd: "Get",
+            keys: [`${this.slot}_deathcount`]
+        };
+        this.client.socket.send(deathLoadPacket);
     }
 }
 
