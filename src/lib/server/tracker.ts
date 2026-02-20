@@ -1,12 +1,17 @@
-import { EventEmitter } from "node:events";
+import {EventEmitter} from "node:events";
 import {type Config, getConfig} from "$lib/server/config";
 import {ClientManager} from "$lib/server/archipelago";
-import {ColorMessageNode as ApColorMessageNode, type Hint as ApHint, ItemMessageNode as ApItemMessageNode, type MessageNode as ApMessageNode} from "archipelago.js"
+import {
+    ColorMessageNode as ApColorMessageNode,
+    type Hint as ApHint,
+    ItemMessageNode as ApItemMessageNode,
+    type MessageNode as ApMessageNode
+} from "archipelago.js"
 import {building} from "$app/environment";
 
 export class Tracker extends EventEmitter {
     private config: Config;
-    private readonly clients: { [slot: string]: ClientManager};
+    private readonly clients: { [slot: string]: ClientManager };
 
     private readonly logs: LogNode[][];
     private readonly mainClient: ClientManager;
@@ -20,7 +25,7 @@ export class Tracker extends EventEmitter {
         for (let slot of this.config.ap_slots) {
             const client = new ClientManager(slot)
             this.clients[slot[0]] = client;
-            client.on("update", ()=> this.sendUpdate(slot[0]))
+            client.on("update", () => this.sendUpdate(slot[0]))
             client.connect();
         }
         this.mainClient = this.clients[this.config.ap_slots[0][0]];
@@ -68,7 +73,7 @@ export class Tracker extends EventEmitter {
         }
     }
 
-    sendUpdate = (slot?: string)=> {
+    sendUpdate = (slot?: string) => {
         if (slot) {
             this.emit(`updateSlot${slot}`, this.clients[slot].getSlotData());
         }
@@ -76,7 +81,7 @@ export class Tracker extends EventEmitter {
     }
 
     getGeneralData = (): GeneralData => {
-        let slotData: {[slot: string]: GeneralSlotData} = {};
+        let slotData: { [slot: string]: GeneralSlotData } = {};
         for (let slot in this.clients) {
             const fullData = this.clients[slot].getSlotData();
             slotData[slot] = {
@@ -88,7 +93,7 @@ export class Tracker extends EventEmitter {
         }
         return {
             logs: this.logs,
-            hints: this.mainClient.client.items.hints.map(Tracker.convertHint),
+            hints: this.getHints(),
             slotData: slotData,
         }
 
@@ -100,18 +105,28 @@ export class Tracker extends EventEmitter {
     hasSlot = (slot: string) => {
         return Object.keys(this.clients).includes(slot);
     }
+
+    private getHints() {
+        const hints: Set<Hint> = new Set();
+        for (let slot in this.clients) {
+            this.clients[slot].client.items.hints.map(Tracker.convertHint).forEach((hint) => {
+                hints.add(hint);
+            });
+        }
+        return Array.from(hints);
+    }
 }
 
 export let tracker: Tracker;
 if (!building) {
     const config = await getConfig();
-     tracker = new Tracker(config);
+    tracker = new Tracker(config);
 }
 
 export type GeneralData = {
     logs: LogNode[][];
     hints: Hint[];
-    slotData: {[slot: string]: GeneralSlotData };
+    slotData: { [slot: string]: GeneralSlotData };
 }
 
 export type GeneralSlotData = {

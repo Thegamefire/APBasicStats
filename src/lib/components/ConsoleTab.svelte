@@ -15,7 +15,7 @@
 </script>
 
 <div bind:this={consoleDiv}
-     class="w-6/7  md:w-4/5 overflow-scroll rounded-lg  px-4 py-2 border-3  border-gray-800 dark:border-gray-100"
-        style="max-height: 75vh;">
+     class="overflow-scroll rounded-lg  px-4 py-2 border-3  border-gray-800 dark:border-gray-100"
+     style="max-height: 75vh;">
     <APConsole logs={logs}/>
 </div>
