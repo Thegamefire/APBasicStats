@@ -48,7 +48,7 @@
     <div class="w-6/7 md:w-4/5 max-h-full">
         <div class="w-full mb-2">
             {#each tabs as tab, i}
-                <button onclick={() => selectedTabIndex = i} class="mx-2 px-4 py-1 rounded-full {selectedTabIndex===i?'bg-violet-200':'active:bg-gray-200 hover:bg-gray-100'}">{tab.name}</button>
+                <button onclick={() => selectedTabIndex = i} class="mx-2 px-4 py-1 rounded-full  dark:text-white {selectedTabIndex===i?'bg-violet-200 dark:bg-violet-400':'active:bg-gray-200 active:dark:bg-gray-400 hover:bg-gray-100 hover:dark:bg-gray-500'}">{tab.name}</button>
             {/each}
         </div>
         <div class="rounded-xl overflow-scroll max-h-full">
