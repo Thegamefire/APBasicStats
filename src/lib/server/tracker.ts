@@ -107,13 +107,14 @@ export class Tracker extends EventEmitter {
     }
 
     private getHints() {
-        const hints: Set<Hint> = new Set();
+        const hints: Set<string> = new Set<string>();
         for (let slot in this.clients) {
             this.clients[slot].client.items.hints.map(Tracker.convertHint).forEach((hint) => {
-                hints.add(hint);
+                hints.add(JSON.stringify(hint));
+
             });
         }
-        return Array.from(hints);
+        return Array.from(hints).map(e => JSON.parse(e) as Hint);
     }
 }
 
