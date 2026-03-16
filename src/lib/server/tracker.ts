@@ -70,6 +70,7 @@ export class Tracker extends EventEmitter {
             receiver: hint.item.receiver.name,
             sender: hint.item.sender.name,
             progression: hint.item.progression,
+            trap: hint.item.trap,
         }
     }
 
@@ -143,9 +144,10 @@ export type Hint = {
     receiver: string,
     sender: string,
     progression: boolean,
+    trap: boolean,
 }
 export type LogNode = {
-    type: "item" | "item-progression" | "location" | "color" | "text" | "entrance" | "player",
+    type: "item" | "item-progression" | "item-trap" | "location" | "color" | "text" | "entrance" | "player",
     text: string,
     color?: string;
 }
