@@ -8,11 +8,13 @@ import {
     type MessageNode as ApMessageNode
 } from "archipelago.js"
 import {building} from "$app/environment";
+import {GoodSet} from "$lib/goodset";
 
 export class Tracker extends EventEmitter {
     private config: Config;
     private readonly clients: { [slot: string]: ClientManager };
 
+    private readonly hints: GoodSet<Hint>;
     private readonly logs: LogNode[][];
     private readonly mainClient: ClientManager;
 
@@ -21,17 +23,24 @@ export class Tracker extends EventEmitter {
         this.config = config;
         this.logs = [];
         this.clients = {};
+        this.hints = new GoodSet<Hint>();
 
         for (let slot of this.config.ap_slots) {
             const client = new ClientManager(slot)
             this.clients[slot[0]] = client;
+            client.client.items.on("hintReceived", this.onHint)
+            client.client.items.on("hintsInitialized", (hints) => this.onHint(...hints))
             client.on("update", () => this.sendUpdate(slot[0]))
             client.connect();
         }
         this.mainClient = this.clients[this.config.ap_slots[0][0]];
-        this.mainClient.client.items.on("hintReceived", () => this.sendUpdate);
         this.mainClient.client.messages.on("message", this.onMessage);
         this.mainClient.client.deathLink.on("deathReceived", this.logDeath);
+    }
+
+    onHint = (...hints: ApHint[]) => {
+        let internal_hints = hints.map(Tracker.convertHint);
+        this.hints.add(...internal_hints);
     }
 
     onMessage = (text: string, nodes: ApMessageNode[]) => {
@@ -94,7 +103,7 @@ export class Tracker extends EventEmitter {
         }
         return {
             logs: this.logs,
-            hints: this.getHints(),
+            hints: this.hints.items(),
             slotData: slotData,
         }
 
@@ -107,16 +116,6 @@ export class Tracker extends EventEmitter {
         return Object.keys(this.clients).includes(slot);
     }
 
-    private getHints() {
-        const hints: Set<string> = new Set<string>();
-        for (let slot in this.clients) {
-            this.clients[slot].client.items.hints.map(Tracker.convertHint).forEach((hint) => {
-                hints.add(JSON.stringify(hint));
-
-            });
-        }
-        return Array.from(hints).map(e => JSON.parse(e) as Hint);
-    }
 }
 
 export let tracker: Tracker;
