@@ -27,4 +27,12 @@ export class GoodSet<T> {
     items = () => {
         return this._values;
     }
+
+    static union<T>(...goodsets: GoodSet<T>[]): GoodSet<T> {
+        const result = new GoodSet<T>();
+        for (const set of goodsets) {
+            result.add(...set.items());
+        }
+        return result;
+    }
 }
