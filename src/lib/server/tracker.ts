@@ -111,6 +111,9 @@ export class Tracker extends EventEmitter {
         return Object.keys(this.clients).includes(slot);
     }
 
+    getDataPackage() {
+        return this.mainClient.client.package.exportPackage();
+    }
 }
 
 export let tracker: Tracker;
