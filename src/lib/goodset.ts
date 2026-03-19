@@ -1,4 +1,6 @@
-export class GoodSet<T> {
+import hash, {type NotUndefined} from "object-hash";
+
+export class GoodSet<T extends NotUndefined> {
     static add_called: number;
     private _keys: Set<string>;
     private _values: T[]
@@ -12,7 +14,7 @@ export class GoodSet<T> {
     add = (...items: T[]): number => {
         let added_count = 0;
         for (const item of items) {
-            const key = JSON.stringify(item)
+            const key = hash(item)
             if (!this._keys.has(key)) {
                 this._keys.add(key);
                 this._values.push(item);
@@ -22,13 +24,13 @@ export class GoodSet<T> {
     }
 
     has= (item: T): boolean => {
-        return this._keys.has(JSON.stringify(item));
+        return this._keys.has(hash(item));
     }
     items = () => {
         return this._values;
     }
 
-    static union<T>(...goodsets: GoodSet<T>[]): GoodSet<T> {
+    static union<T extends NotUndefined>(...goodsets: GoodSet<T>[]): GoodSet<T> {
         const result = new GoodSet<T>();
         for (const set of goodsets) {
             result.add(...set.items());
