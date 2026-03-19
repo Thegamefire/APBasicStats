@@ -1,6 +1,6 @@
 import {EventEmitter} from "node:events";
 import {type Config, getConfig} from "$lib/server/config";
-import {ClientManager} from "$lib/server/archipelago";
+import {SlotManager} from "$lib/server/slotmanager";
 import {
     ColorMessageNode as ApColorMessageNode,
     type Hint as ApHint,
@@ -12,25 +12,29 @@ import {GoodSet} from "$lib/goodset";
 
 export class Tracker extends EventEmitter {
     private config: Config;
-    private readonly clients: { [slot: string]: ClientManager };
+    readonly clients: { [slot: string]: SlotManager };
 
-    private readonly hints: GoodSet<Hint>;
     private readonly logs: LogNode[][];
-    private readonly mainClient: ClientManager;
+    private readonly mainClient: SlotManager;
 
     constructor(config: Config) {
         super();
         this.config = config;
         this.logs = [];
         this.clients = {};
-        this.hints = new GoodSet<Hint>();
 
         for (let slot of this.config.ap_slots) {
-            const client = new ClientManager(slot)
+            const client = new SlotManager(slot)
             this.clients[slot[0]] = client;
-            client.client.items.on("hintReceived", this.onHint)
-            client.client.items.on("hintsInitialized", (hints) => this.onHint(...hints))
-            client.on("update", () => this.sendUpdate(slot[0]))
+            client.on("Death", e => this.emit("Death", e));
+            client.on("Item", e => this.emit("Item", e));
+            client.on("LocationUpdate", e => this.emit("LocationUpdate", e));
+            client.on("SlotState", e => this.emit("SlotConnect", e));
+            client.on("Hint", e => {
+                if ((e as Hint).receiver === slot[0]) {
+                    this.emit("Item", e)
+                }
+            });
             client.connect();
         }
         this.mainClient = this.clients[this.config.ap_slots[0][0]];
@@ -38,24 +42,22 @@ export class Tracker extends EventEmitter {
         this.mainClient.client.deathLink.on("deathReceived", this.logDeath);
     }
 
-    onHint = (...hints: ApHint[]) => {
-        let internal_hints = hints.map(Tracker.convertHint);
-        this.hints.add(...internal_hints);
-    }
-
     onMessage = (text: string, nodes: ApMessageNode[]) => {
         if (!Tracker.shouldIgnoreMessage(nodes)) {
-            this.logs.push(nodes.map(Tracker.convertMessageNode))
+            const message = nodes.map(Tracker.convertMessageNode);
+            this.logs.push(message);
+            this.emit("ConsoleMsg", message);
         }
     }
 
     logDeath = (source: string, time: number, cause?: string | undefined) => {
-        this.logs.push([
+        const msg: LogNode[] = [
             {type: "player", text: source},
             {type: "color", text: " died", color: "red"},
             {type: "text", text: cause ? ": " + cause : ""},
-        ]);
-        this.sendUpdate();
+        ]
+        this.logs.push(msg);
+        this.emit("ConsoleMsg", msg);
     }
 
     static shouldIgnoreMessage(nodes: ApMessageNode[]) {
@@ -83,17 +85,10 @@ export class Tracker extends EventEmitter {
         }
     }
 
-    sendUpdate = (slot?: string) => {
-        if (slot) {
-            this.emit(`updateSlot${slot}`, this.clients[slot].getSlotData());
-        }
-        this.emit("updateGeneral", this.getGeneralData());
-    }
-
-    getGeneralData = (): GeneralData => {
+    getGeneralState = (): GeneralData => {
         let slotData: { [slot: string]: GeneralSlotData } = {};
         for (let slot in this.clients) {
-            const fullData = this.clients[slot].getSlotData();
+            const fullData = this.clients[slot].getSlotState();
             slotData[slot] = {
                 game: fullData.game,
                 collectedChecksCount: fullData.checkedLocations.length,
@@ -103,13 +98,13 @@ export class Tracker extends EventEmitter {
         }
         return {
             logs: this.logs,
-            hints: this.hints.items(),
+            hints: GoodSet.union<Hint>(...Object.values(this.clients).map(s => s.hints)).items(),
             slotData: slotData,
         }
 
     }
     getSlotSpecificData = (slot: string) => {
-        return this.clients[slot].getSlotData();
+        return this.clients[slot].getSlotState();
     }
 
     hasSlot = (slot: string) => {

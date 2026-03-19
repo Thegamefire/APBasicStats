@@ -1,6 +1,5 @@
 import {error} from "@sveltejs/kit";
 import {produce} from "sveltekit-sse";
-import type {SlotData} from "$lib/server/archipelago";
 import {tracker} from "$lib/server/tracker";
 
 export const POST = async ({params}) => {
@@ -9,8 +8,11 @@ export const POST = async ({params}) => {
         throw error(400, "Invalid Slot");
     }
     return produce(async function start({emit}) {
-        const send = (data: SlotData) => {
-            const {error} = emit('message', JSON.stringify(data));
+        const send = (cmd: string, data: any) => {
+            const {error} = emit('message', JSON.stringify({
+                cmd: cmd,
+                data: data
+            }));
             if (error) {
                 return cancel()
             }
@@ -20,8 +22,12 @@ export const POST = async ({params}) => {
 
         }
 
-        tracker.on(`updateSlot${slotName}`, send)
-        send(tracker.getSlotSpecificData(slotName));
+        const client = tracker.clients[slotName]
+        client.on("SlotState", d => send("SlotState", d));
+        client.on("LocationUpdate", d => send("LocationUpdate", d));
+        client.on("Item", d => send("Item", d));
+        client.on("Hint", d => send("Hint", d));
+        send("SlotState", client.getSlotState());
         return cancel();
     })
 }

@@ -10,15 +10,18 @@ import {type Config, getConfig} from "$lib/server/config";
 import {building} from "$app/environment";
 import EventEmitter from "node:events";
 import {type Hint, Tracker} from "$lib/server/tracker"
+import {GoodSet} from "$lib/goodset";
 let config: Config;
 
 if (!building) {
     config = await getConfig();
 }
 
-export class ClientManager extends EventEmitter{
+export class SlotManager extends EventEmitter{
     public readonly slot: string;
-    private readonly aliases: string[]
+    private readonly aliases: string[];
+    public items: GoodSet<Item>;
+    public hints: GoodSet<Hint>;
     public client: Client;
 
     private deathCount: number;
@@ -27,14 +30,18 @@ export class ClientManager extends EventEmitter{
         this.aliases = aliases;
         this.slot = aliases[0];
         this.deathCount = 0;
+        this.items = new GoodSet<Item>();
+        this.hints = new GoodSet<Hint>();
         this.client = new Client();
 
         this.client.socket.on("connected", this.onConnected);
         this.client.socket.on("disconnected", this.onDisconnect);
         this.client.deathLink.on("deathReceived", this.onDeath);
-        this.client.room.on('locationsChecked', this.sendUpdate);
-        this.client.items.on("itemsReceived", this.sendUpdate);
-        this.client.socket.on("retrieved", this.onRetrieved)
+        this.client.room.on('locationsChecked', this.onLocationsChecked);
+        this.client.items.on("itemsReceived", this.onItemsReceived);
+        this.client.items.on("hintReceived", this.onHint);
+        this.client.items.on("hintsInitialized", (l) => this.onHint(...l));
+        this.client.socket.on("retrieved", this.onRetrieved);
 
     }
 
@@ -61,6 +68,7 @@ export class ClientManager extends EventEmitter{
     onConnected = () => {
         console.log(`[AP] Connected to Slot ${this.slot}`);
         this.fetchDeathCount();
+        this.emit("SlotState", this.getSlotState());
     }
 
     onDisconnect = () => {
@@ -68,10 +76,42 @@ export class ClientManager extends EventEmitter{
         this.connect();
     }
 
+    onLocationsChecked = (locations: number[])=> {
+        for (const id of locations) {
+            const location = this.locationIdToName(id);
+            this.emit("LocationUpdate", {slot: this.slot, location: location, checked: true})
+        }
+    }
+
+    onItemsReceived = (items: ApItem[]) => {
+        for (const apItem of items) {
+            const item = SlotManager.convertApItem(apItem);
+            this.items.add(item);
+            this.emit("Item", {
+                item: item.name,
+                location: item.location,
+                sender: item.sender,
+                receiver: this.slot,
+                collectedCheckCount: this.getLocationsList(true).length
+            });
+        }
+    }
+
+    onHint = (...hints: ApHint[]) => {
+        for (const apHint of hints) {
+            if (!this.isOwnHint(apHint)) {
+                continue;
+            }
+            const hint = Tracker.convertHint(apHint);
+            this.hints.add(hint);
+            this.emit("Hint", hint);
+        }
+    }
+
     onDeath = (source: string, time: number, cause?: string | undefined) => {
         if (this.aliases.includes(source)) {
             this.deathCount++;
-            this.sendUpdate();
+            this.emit("Death", {slot: this.slot, deathCount: this.deathCount});
             this.saveDeathCount();
         }
     }
@@ -83,25 +123,9 @@ export class ClientManager extends EventEmitter{
                 const oldDeathCount = this.deathCount;
                 this.deathCount = deathCount;
                 if (oldDeathCount !== this.deathCount) {
-                    this.sendUpdate();
+                    this.emit("Death", {slot: this.slot, deathCount: this.deathCount});
                 }
             }
-        }
-    }
-
-    sendUpdate = () => {
-        this.emit("update");
-    }
-
-    getSlotData = (): SlotData => {
-        let hints = this.client.items.hints.filter(this.isOwnHint).map(Tracker.convertHint);
-        return {
-            receivedItems: this.client.items.received.map(ClientManager.convertApItem),
-            checkedLocations: this.client.room.checkedLocations.map(this.locationIdToName),
-            uncheckedLocations: this.client.room.missingLocations.map(this.locationIdToName),
-            deathCount: this.deathCount,
-            game: this.client.game,
-            hints: hints
         }
     }
 
@@ -144,9 +168,30 @@ export class ClientManager extends EventEmitter{
         };
         this.client.socket.send(deathLoadPacket);
     }
+
+    getLocationsList = (checked: boolean) => {
+        if (checked) {
+            return Array.from(new Set(this.client.room.checkedLocations.map(this.locationIdToName)));
+        } else {
+            return Array.from(new Set(this.client.room.missingLocations.map(this.locationIdToName)));
+        }
+    }
+
+    getSlotState= (): SlotState => {
+        return {
+            slot: this.slot,
+            receivedItems: this.items.items(),
+            checkedLocations: this.getLocationsList(true),
+            uncheckedLocations: this.getLocationsList(false),
+            deathCount: this.deathCount,
+            game: this.client.game,
+            hints: this.hints.items()
+        }
+    }
 }
 
-export type SlotData = {
+export type SlotState = {
+    slot: string,
     receivedItems: Item[];
     checkedLocations: string[];
     uncheckedLocations: string[];

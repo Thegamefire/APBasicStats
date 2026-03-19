@@ -3,38 +3,74 @@
     import ReceivedItemTable from "$lib/components/ReceivedItemTable.svelte";
     import LocationTable from "$lib/components/LocationTable.svelte";
     import {source} from "sveltekit-sse";
-    import type {SlotData} from "$lib/server/archipelago";
+    import type {Item} from "$lib/server/slotmanager";
+    import type {Hint} from "$lib/server/tracker";
     import HintTable from "$lib/components/HintTable.svelte";
 
     let {data} = $props()
     const slotName = $derived(data.slotName);
 
-    let tracker: SlotData = $state({
-        game: "",
-        checkedLocations: [],
-        uncheckedLocations: [],
-        receivedItems: [],
-        deathCount: 0,
-        hints: []
-    });
+    let receivedItems: Item[] = $state([]);
+    let checkedLocations: string[] = $state([]);
+    let uncheckedLocations: string[] = $state([]);
+    let hints: Hint[] = $state([]);
 
     onMount(() => {
     const trackerSource = source(`/api/slotdata/${slotName}`).select("message");
 
     trackerSource.subscribe((message: string) => {
-        tracker = JSON.parse(message);
+        const msg = JSON.parse(message);
+        switch (msg.cmd) {
+            case "Item": {
+                if (msg.data.receiver === slotName) {
+                    receivedItems.push(msg.data);
+                }
+                break;
+            }
+            case "Hint": {
+                if ((msg.data as Hint).receiver === slotName || (msg.data as Hint).sender === slotName) {
+                    hints.push(msg.data);
+                }
+                break;
+            }
+            case "LocationUpdate": {
+                if (msg.data.slot !== slotName) {
+                    return;
+                }
+                if (msg.data.checked) {
+                    uncheckedLocations = uncheckedLocations.filter(l => msg.data.location !== l);
+                    checkedLocations.push(msg.data.location as string);
+                } else {
+                    checkedLocations = checkedLocations.filter(l => msg.data.location !== l);
+                    uncheckedLocations.push(msg.data.location as string);
+                }
+                break;
+            }
+            case "SlotState": {
+                if (msg.data.slot !== slotName) {
+                    return;
+                }
+                receivedItems = msg.data.receivedItems;
+                checkedLocations = msg.data.checkedLocations;
+                uncheckedLocations = msg.data.uncheckedLocations;
+                hints = msg.data.hints;
+
+                break;
+            }
+        }
     });
     })
 
+
     let tabs = $derived([
-     { name: "Received Items", comp: ReceivedItemTable, props: {items: tracker.receivedItems}  },
+     { name: "Received Items", comp: ReceivedItemTable, props: {items: receivedItems}  },
      { name: "Locations", comp: LocationTable, props: {
-             collectedChecks: tracker.checkedLocations,
-             uncollectedChecks: tracker.uncheckedLocations
+             collectedChecks: checkedLocations,
+             uncollectedChecks: uncheckedLocations
             }
         },
     { name: "Hints", comp: HintTable, props: {
-            hints: tracker.hints
+            hints: hints
         }}
     ]);
 

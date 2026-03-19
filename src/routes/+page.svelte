@@ -1,27 +1,59 @@
 <script lang="ts">
     import {onMount} from "svelte";
     import {source} from "sveltekit-sse";
-    import type {GeneralData} from "$lib/server/tracker";
+    import type {GeneralData, LogNode, Hint, GeneralSlotData} from "$lib/server/tracker";
     import HintTable from "$lib/components/HintTable.svelte";
     import ConsoleTab from "$lib/components/ConsoleTab.svelte";
     import OverviewTab from "$lib/components/OverviewTab.svelte";
 
     let tracker: GeneralData = $state({logs: [], hints: [], slotData: {}});
 
+    let logs: LogNode[] = $state([]);
+    let hints: Hint[] = $state([]);
+    let slotData: { [slot: string]: GeneralSlotData} = $state({});
+
     onMount(() => {
         const trackerSource = source("/api/tracker").select("message");
 
         trackerSource.subscribe((message: string) => {
-            tracker = JSON.parse(message);
+            const msg = JSON.parse(message);
+            switch (msg.cmd) {
+                case "GeneralState": {
+                    logs = msg.data.logs;
+                    hints = msg.data.hints;
+                    slotData = msg.data.slotData;
+                    break;
+                }
+                case "LocationUpdate": {
+                    if (Object.keys(slotData).includes(msg.data.slot)) {
+                        slotData[msg.data.slot as string].collectedChecksCount = msg.data.collectedChecksCount
+                    }
+                    break;
+                }
+                case "Death": {
+                    if (Object.keys(slotData).includes(msg.data.slot)) {
+                        slotData[msg.data.slot as string].deathCount = msg.data.deathCount
+                    }
+                    break;
+                }
+                case "ConsoleMsg": {
+                    logs.push(msg.data);
+                    break;
+                }
+                case "Hint": {
+                    hints.push(msg.data)
+                    break;
+                }
+            }
         })
     })
 
     let tabs = $derived([
-        {name: "Overview", comp: OverviewTab, props: {tracker: tracker}},
-        {name: "Console", comp: ConsoleTab, props: {logs: tracker.logs}},
+        {name: "Overview", comp: OverviewTab, props: {generalData: slotData, logs: logs}},
+        {name: "Console", comp: ConsoleTab, props: {logs: logs}},
         {
             name: "Hints", comp: HintTable, props: {
-                hints: tracker.hints
+                hints: hints
             }
         }
     ]);
