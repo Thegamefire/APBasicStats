@@ -1,7 +1,7 @@
 {
   "name": "apbasicstats",
   "private": true,
-  "version": "1.1.2",
+  "version": "1.2.0",
   "type": "module",
   "scripts": {
     "dev": "vite dev",
@@ -14,12 +14,12 @@
   "devDependencies": {
     "@sveltejs/adapter-auto": "^7.0.0",
     "@sveltejs/adapter-node": "^5.5.1",
-    "@sveltejs/kit": "^2.49.1",
+    "@sveltejs/kit": "2.53.3",
     "@sveltejs/vite-plugin-svelte": "^6.2.1",
     "@tailwindcss/vite": "^4.1.17",
     "@types/node": "^25.0.9",
     "@types/object-hash": "^3.0.6",
-    "svelte": "^5.45.6",
+    "svelte": "5.53.5",
     "svelte-check": "^4.3.4",
     "sveltekit-sse": "^0.14.3",
     "tailwindcss": "^4.1.17",
