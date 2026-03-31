@@ -28,7 +28,13 @@ export class Tracker extends EventEmitter {
             this.clients[slot[0]] = client;
             client.on("Death", e => this.emit("Death", e));
             client.on("Item", e => this.emit("Item", e));
-            client.on("LocationUpdate", e => this.emit("LocationUpdate", e));
+            client.on("LocationUpdate", e => {
+                const fullData = this.clients[e.slot].getSlotState();
+                this.emit("LocationUpdate", {
+                    slot: e.slot,
+                    collectedChecksCount: fullData.checkedLocations.length
+                });
+            });
             client.on("SlotState", e => this.emit("SlotConnect", e));
             client.on("Hint", e => {
                 if ((e as Hint).receiver === slot[0]) {
