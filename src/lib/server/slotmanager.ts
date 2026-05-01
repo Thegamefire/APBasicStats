@@ -11,13 +11,14 @@ import {building} from "$app/environment";
 import EventEmitter from "node:events";
 import {type Hint, Tracker} from "$lib/server/tracker"
 import {GoodSet} from "$lib/goodset";
+
 let config: Config;
 
 if (!building) {
     config = await getConfig();
 }
 
-export class SlotManager extends EventEmitter{
+export class SlotManager extends EventEmitter {
     public readonly slot: string;
     private readonly aliases: string[];
     public items: GoodSet<Item>;
@@ -25,6 +26,7 @@ export class SlotManager extends EventEmitter{
     public client: Client;
 
     private deathCount: number;
+
     constructor(aliases: string[], mainSlot?: boolean) {
         super();
         this.aliases = aliases;
@@ -76,7 +78,7 @@ export class SlotManager extends EventEmitter{
         this.connect();
     }
 
-    onLocationsChecked = (locations: number[])=> {
+    onLocationsChecked = (locations: number[]) => {
         for (const id of locations) {
             const location = this.locationIdToName(id);
             this.emit("LocationUpdate", {slot: this.slot, location: location, checked: true})
@@ -88,7 +90,7 @@ export class SlotManager extends EventEmitter{
             const item = SlotManager.convertApItem(apItem);
             this.items.add(item);
             this.emit("Item", {
-                item: item.name,
+                name: item.name,
                 location: item.location,
                 sender: item.sender,
                 receiver: this.slot,
@@ -132,6 +134,7 @@ export class SlotManager extends EventEmitter{
     isOwnHint = (hint: ApHint) => {
         return hint.item.receiver.name === this.slot || hint.item.sender.name === this.slot;
     }
+
     static convertApItem(item: ApItem): Item {
         return {
             sender: item.sender.name,
@@ -177,7 +180,7 @@ export class SlotManager extends EventEmitter{
         }
     }
 
-    getSlotState= (): SlotState => {
+    getSlotState = (): SlotState => {
         return {
             slot: this.slot,
             receivedItems: this.items.items(),
