@@ -61,8 +61,8 @@ export class SlotManager extends EventEmitter {
                 tags: ["DeathLink", "APBasicStats", "Tracker"]
             }
         )
-            .catch(() => {
-                console.error(`[AP] Failed to Connect to ${this.slot}\n     Retrying in 5sec...`);
+            .catch((r) => {
+                console.error(`[AP] Failed to Connect to ${this.slot}: ${r}\n     Retrying in 5sec...`);
                 setTimeout(() => this.connect(), 5000);
             });
     }
