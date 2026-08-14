@@ -15,12 +15,12 @@
     });
 </script>
 
-<div class="rounded-xl overflow-hidden mb-6">
-        <TrackerTable tracker={generalData}/>
-    </div>
+<div class="rounded-lg overflow-hidden mb-6">
+    <TrackerTable tracker={generalData}/>
+</div>
 
-    <div bind:this={consoleDiv}
-         class="overflow-scroll rounded-lg  px-4 py-2 border-3  border-gray-800 dark:border-gray-100"
-         style="max-height: 50vh;">
-        <APConsole logs={logs}/>
-    </div>
+<div bind:this={consoleDiv}
+     class="overflow-scroll rounded-lg  px-4 py-2 border-3  border-gray-800 dark:border-gray-100"
+     style="max-height: 50vh;">
+    <APConsole logs={logs}/>
+</div>

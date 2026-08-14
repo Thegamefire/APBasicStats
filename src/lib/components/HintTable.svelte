@@ -3,7 +3,7 @@
 
     let {hints} = $props();
     let sortBy = $state({col: "Receiver", ascending: false})
-  
+
     function headerClicked(col: string) {
         if (sortBy.col == col) {
             sortBy.ascending = !sortBy.ascending;
@@ -13,7 +13,7 @@
         }
     }
 
-  let sortedHints = $derived(hints.toSorted((a: Hint, b: Hint) => {
+    let sortedHints = $derived(hints.toSorted((a: Hint, b: Hint) => {
         switch (sortBy.col) {
             case "Receiver":
                 return a.receiver.localeCompare(b.receiver) * (sortBy.ascending ? 1 : -1);
@@ -39,7 +39,7 @@
 <table class="w-full md:text-lg lg:text-xl text-center">
     <thead>
     <tr>
-        {#each ["Item", "Location", "Receiver",  "Sender"] as header}
+        {#each ["Item", "Location", "Receiver", "Sender"] as header}
             <th class="py-2 cursor-pointer bg-violet-200 dark:bg-violet-600 dark:text-white"
                 onclick={() => headerClicked(header)}>{header} {getSortIcon(header)}</th>
         {/each}

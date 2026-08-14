@@ -1,4 +1,6 @@
 <script lang="ts">
+    import {Progressbar, Tooltip} from "flowbite-svelte";
+
     let {tracker} = $props();
 
     let sortBy = $state({col: "Slot", ascending: false})
@@ -56,7 +58,13 @@
             <td class="py-1 px-1 pb-2"><a href="/slot/{slot}">{slot}</a></td>
             <td>{tracker[slot].game}</td>
             <td>{tracker[slot].collectedChecksCount}/{tracker[slot].totalChecksCount}</td>
-            <td>{getPercentage(slot).toFixed(2)}%</td>
+            <td>
+                <span class="flex h-full gap-2 items-center">
+                <Progressbar progress={getPercentage(slot)}/>
+                <Tooltip>{getPercentage(slot).toFixed(2)}%</Tooltip>
+                <span class="hidden lg:inline">{getPercentage(slot).toFixed(2)}%</span>
+                </span>
+            </td>
             <td>{tracker[slot].deathCount}</td>
         </tr>
     {/each}
