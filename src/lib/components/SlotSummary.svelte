@@ -12,7 +12,7 @@
 </script>
 
 <Card class="md:h-36 md:min-w-64 w-fit p-4">
-    <span class="font-bold text-md md:text-lg lg:text-xl">{slotName}</span>
+    <a href="/slot/{slotName}" class="font-bold text-md md:text-lg lg:text-xl hover:underline">{slotName}</a>
     <span class="text-sm text-zinc-500 flex items-center gap-1 w-fit">
         <GameIcon/>{slotData.game}</span>
     <Tooltip>Game</Tooltip>

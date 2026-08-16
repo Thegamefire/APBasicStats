@@ -2,7 +2,7 @@
     import {onMount} from "svelte";
     import {source} from "sveltekit-sse";
     import type {GeneralData, LogNode, Hint, GeneralSlotData} from "$lib/server/tracker";
-    import {Hr} from "flowbite-svelte";
+    import {Hr, Button, Dropdown, DropdownItem} from "flowbite-svelte";
     import APConsole from "$lib/components/APConsole.svelte";
     import SlotSummary from "$lib/components/SlotSummary.svelte";
     import HintComponent from "$lib/components/Hint.svelte";
@@ -69,12 +69,54 @@
             unsubscribe?.();
         };
     });
+
+    let sortMode = $state({key: "Slot", ascending: true});
+
+    const getPercentage = (sd: GeneralSlotData) => sd.collectedChecksCount * 100 / sd.totalChecksCount
+
+    let sortedSlots = $derived(Object.keys(slotData).toSorted((a, b) => {
+        switch (sortMode.key) {
+            case "Game":
+                return slotData[a].game.localeCompare(slotData[b].game) * (sortMode.ascending ? 1 : -1);
+            case "Collected Checks":
+                let checksComp = slotData[a].collectedChecksCount - slotData[b].collectedChecksCount
+                let totalComp = slotData[a].totalChecksCount - slotData[b].totalChecksCount
+                return ((checksComp != 0) ? checksComp : totalComp) * (sortMode.ascending ? 1 : -1);
+            case "Percentage":
+                return (getPercentage(slotData[a]) - getPercentage(slotData[b])) * (sortMode.ascending ? 1 : -1);
+            case "Deaths":
+                return (slotData[a].deathCount - slotData[b].deathCount) * (sortMode.ascending ? 1 : -1);
+            default:
+                return a.localeCompare(b) * (sortMode.ascending ? 1 : -1);
+        }
+    }))
+
+
 </script>
 
 <div class="flex w-5/6 min-h-0 gap-20 flex-col md:flex-row">
     <div class="flex-4 min-h-0 flex flex-col">
+        <div class="flex justify-end mb-2">
+            <Button color="light">{sortMode.key} {sortMode.ascending ? "⏶" : "⏷"}</Button>
+            <Dropdown simple>
+                <DropdownItem onclick={() => sortMode = {key: "Slot", ascending: true}}>Slot ⏶</DropdownItem>
+                <DropdownItem onclick={() => sortMode = {key: "Slot", ascending: false}}>Slot ⏷</DropdownItem>
+                <DropdownItem onclick={() => sortMode = {key: "Game", ascending: true}}>Game ⏶</DropdownItem>
+                <DropdownItem onclick={() => sortMode = {key: "Game", ascending: false}}>Game ⏷</DropdownItem>
+                <DropdownItem onclick={() => sortMode = {key: "Collected Checks", ascending: true}}>Collected Checks ⏶
+                </DropdownItem>
+                <DropdownItem onclick={() => sortMode = {key: "Collected Checks", ascending: false}}>Collected Checks ⏷
+                </DropdownItem>
+                <DropdownItem onclick={() => sortMode = {key: "Percentage", ascending: true}}>Percentage ⏶
+                </DropdownItem>
+                <DropdownItem onclick={() => sortMode = {key: "Percentage", ascending: false}}>Percentage ⏷
+                </DropdownItem>
+                <DropdownItem onclick={() => sortMode = {key: "Deaths", ascending: true}}>Deaths ⏶</DropdownItem>
+                <DropdownItem onclick={() => sortMode = {key: "Deaths", ascending: false}}>Deaths ⏷</DropdownItem>
+            </Dropdown>
+        </div>
         <div class="flex flex-wrap gap-2 min-h-0">
-            {#each Object.keys(slotData) as slot}
+            {#each sortedSlots as slot}
                 <SlotSummary slotName={slot} slotData={slotData[slot]}/>
             {/each}
         </div>
