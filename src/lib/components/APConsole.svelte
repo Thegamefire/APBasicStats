@@ -1,17 +1,18 @@
 <script lang="ts">
     import ApMessageNode from "$lib/components/APMessageNode.svelte";
+    import {Card} from "flowbite-svelte";
 
-    let { logs } = $props()
+    let {logs} = $props()
 
 </script>
 
 
-<div>
+<div class="flex flex-col gap-1">
     {#each logs as log}
-        <div>
+        <Card class="p-3">
             {#each log as node}
-                <ApMessageNode {node} />
+                <ApMessageNode {node}/>
             {/each}
-        </div>
+        </Card>
     {/each}
 </div>

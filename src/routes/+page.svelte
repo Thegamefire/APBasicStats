@@ -30,7 +30,7 @@
 
             switch (msg.cmd) {
                 case "GeneralState":
-                    logs = msg.data.logs;
+                    logs = msg.data.logs.toReversed();
                     hints = msg.data.hints;
                     slotData = msg.data.slotData;
                     break;
@@ -56,7 +56,7 @@
                 }
 
                 case "ConsoleMsg":
-                    logs.push(msg.data);
+                    logs.unshift(msg.data);
                     break;
 
                 case "Hint":
@@ -71,7 +71,7 @@
     });
 </script>
 
-<div class="flex w-5/6 min-h-0">
+<div class="flex w-5/6 min-h-0 gap-20 flex-col md:flex-row">
     <div class="flex-4 min-h-0 flex flex-col">
         <div class="flex flex-wrap gap-2 min-h-0">
             {#each Object.keys(slotData) as slot}
@@ -85,7 +85,7 @@
             {/each}
         </div>
     </div>
-    <div class="flex flex-col flex-1 min-h-0">
+    <div class="overflow-scroll flex flex-col flex-1 min-h-0 pb-4 no-scrollbar">
         <APConsole {logs}/>
     </div>
 </div>
