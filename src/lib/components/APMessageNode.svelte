@@ -1,7 +1,7 @@
 <script lang="ts">
-    import type {TrackerLogNode} from "$lib/types";
+    import type {LogNode} from "$lib/server/tracker";
 
-    let { node }: {node:TrackerLogNode} = $props();
+    let { node }: {node: LogNode} = $props();
 </script>
 
 {#if node.type === "item"}

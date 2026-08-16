@@ -11,8 +11,8 @@
     let percentage = $derived(slotData.collectedChecksCount * 100 / slotData.totalChecksCount);
 </script>
 
-<Card class="h-36 min-w-64 w-fit p-4">
-    <span class="font-bold text-xl">{slotName}</span>
+<Card class="md:h-36 md:min-w-64 w-fit p-4">
+    <span class="font-bold text-md md:text-lg lg:text-xl">{slotName}</span>
     <span class="text-sm text-zinc-500 flex items-center gap-1 w-fit">
         <GameIcon/>{slotData.game}</span>
     <Tooltip>Game</Tooltip>
