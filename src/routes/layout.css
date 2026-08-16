@@ -19,3 +19,7 @@
     --color-primary-900: oklch(38% 0.189 293.745);
     --color-primary-950: oklch(28.3% 0.141 291.089);
 }
+
+@utility no-scrollbar {
+    @apply [scrollbar-width:none] [&::-webkit-scrollbar]:hidden;
+}

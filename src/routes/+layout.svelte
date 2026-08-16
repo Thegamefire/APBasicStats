@@ -12,9 +12,9 @@
     <title>AP Basic Stats</title>
 </svelte:head>
 
-<div class="bg-[#faf9ff] dark:bg-[#16141f] min-h-screen flex flex-col">
+<div class="bg-[#faf9ff] dark:bg-[#16141f] min-h-screen flex flex-col h-screen overflow-hidden">
     <Navbar/>
-    <main class="flex-1 flex flex-col items-center">
+    <main class="flex-1 flex flex-col items-center min-h-0">
         {@render children()}
     </main>
     <Footer/>

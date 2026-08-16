@@ -38,7 +38,7 @@ export class Tracker extends EventEmitter {
             client.on("SlotState", e => this.emit("SlotConnect", e));
             client.on("Hint", e => {
                 if ((e as Hint).receiver === slot[0]) {
-                    this.emit("Item", e)
+                    this.emit("Hint", e)
                 }
             });
             client.connect();

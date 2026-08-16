@@ -2,10 +2,10 @@
     import {onMount} from "svelte";
     import {source} from "sveltekit-sse";
     import type {GeneralData, LogNode, Hint, GeneralSlotData} from "$lib/server/tracker";
-    import HintTable from "$lib/components/HintTable.svelte";
-    import ConsoleTab from "$lib/components/ConsoleTab.svelte";
-    import OverviewTab from "$lib/components/OverviewTab.svelte";
-    import {Tabs, TabItem} from "flowbite-svelte";
+    import {Hr} from "flowbite-svelte";
+    import APConsole from "$lib/components/APConsole.svelte";
+    import SlotSummary from "$lib/components/SlotSummary.svelte";
+    import HintComponent from "$lib/components/Hint.svelte";
 
     let tracker: GeneralData = $state({logs: [], hints: [], slotData: {}});
 
@@ -18,7 +18,15 @@
 
         const unsubscribe = trackerSource.subscribe((message: string | null) => {
             if (!message) return;
-            const msg = JSON.parse(message);
+            let msg = undefined;
+            try {
+                msg = JSON.parse(message);
+            } finally {
+                if (!msg) {
+                    console.error("Failed to parse message", message);
+                }
+            }
+            console.log("Recevied message", message)
 
             switch (msg.cmd) {
                 case "GeneralState":
@@ -48,11 +56,11 @@
                 }
 
                 case "ConsoleMsg":
-                    logs = [...logs, msg.data];
+                    logs.push(msg.data);
                     break;
 
                 case "Hint":
-                    hints = [...hints, msg.data];
+                    hints.push(msg.data);
                     break;
             }
         });
@@ -63,17 +71,21 @@
     });
 </script>
 
-
-<Tabs tabStyle="pill" contentClass="lg:w-5/6">
-    <TabItem open title="Overview">
-        <OverviewTab generalData={slotData} {logs}/>
-    </TabItem>
-    <TabItem title="Console">
-        <ConsoleTab {logs}/>
-    </TabItem>
-    <TabItem title="Hints">
-        <div class="rounded-lg overflow-hidden">
-            <HintTable {hints}/>
+<div class="flex w-5/6 min-h-0">
+    <div class="flex-4 min-h-0 flex flex-col">
+        <div class="flex flex-wrap gap-2 min-h-0">
+            {#each Object.keys(slotData) as slot}
+                <SlotSummary slotName={slot} slotData={slotData[slot]}/>
+            {/each}
         </div>
-    </TabItem>
-</Tabs>
+        <Hr class="m-8"/>
+        <div class=" flex-1 overflow-scroll min-h-0 grid grid-cols-2 xl:grid-cols-4 gap-2 pb-4 no-scrollbar">
+            {#each hints as hint (hint.location)}
+                <HintComponent {hint}/>
+            {/each}
+        </div>
+    </div>
+    <div class="flex flex-col flex-1 min-h-0">
+        <APConsole {logs}/>
+    </div>
+</div>
