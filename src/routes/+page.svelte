@@ -8,6 +8,7 @@
     import HintCardComponent from "$lib/components/Cards/HintCard.svelte";
     import {audioManager} from "$lib/audioManager";
     import DeathSfx from "$lib/assets/deathSfx.wav";
+    import DeathMenu from "$lib/components/DeathMenu.svelte";
 
     let tracker: GeneralData = $state({logs: [], hints: [], slotData: {}});
 
@@ -106,7 +107,8 @@
 
 <div class="flex w-5/6 min-h-0 gap-20 flex-col md:flex-row">
     <div class="flex-4 min-h-0 flex flex-col">
-        <div class="flex justify-end mb-2">
+        <div class="flex justify-end mb-2 gap-2">
+            <DeathMenu slots={Object.keys(slotData)}/>
             <Button color="light">{sortMode.key} {sortMode.ascending ? "⏶" : "⏷"}</Button>
             <Dropdown simple>
                 <DropdownItem onclick={() => sortMode = {key: "Slot", ascending: true}}>Slot ⏶</DropdownItem>

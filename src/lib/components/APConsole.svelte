@@ -9,7 +9,7 @@
 
 <div class="flex flex-col gap-1">
     {#each logs as log}
-        <Card class="p-3">
+        <Card class="p-3 inline-block">
             {#each log as node}
                 <ApMessageNode {node}/>
             {/each}

@@ -113,6 +113,11 @@ export class Tracker extends EventEmitter {
         return this.clients[slot].getSlotState();
     }
 
+    kill = (slot: string) => {
+        this.clients[slot].kill();
+        this.logDeath(slot, Date.now(), `${slot} was killed by someone using APBasicStats`);
+    }
+
     hasSlot = (slot: string) => {
         return Object.keys(this.clients).includes(slot);
     }
