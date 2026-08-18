@@ -1,95 +1,135 @@
 <script lang="ts">
     import {onMount} from "svelte";
-    import ReceivedItemTable from "$lib/components/ReceivedItemTable.svelte";
-    import LocationTable from "$lib/components/LocationTable.svelte";
     import {source} from "sveltekit-sse";
     import type {Item} from "$lib/server/slotmanager";
     import type {Hint} from "$lib/server/tracker";
-    import HintTable from "$lib/components/HintTable.svelte";
+    import ReceivedItemCard from "$lib/components/Cards/ReceivedItemCard.svelte";
+    import {Button, Dropdown, DropdownItem, Heading, Hr} from "flowbite-svelte";
+    import LocationCard from "$lib/components/Cards/LocationCard.svelte";
+    import HintCard from "$lib/components/Cards/HintCard.svelte";
 
     let {data} = $props()
     const slotName = $derived(data.slotName);
 
     let receivedItems: Item[] = $state([]);
-    let checkedLocations: string[] = $state([]);
-    let uncheckedLocations: string[] = $state([]);
+
+    let locations: { [name: string]: boolean } = $state({})
     let hints: Hint[] = $state([]);
 
     onMount(() => {
-    const trackerSource = source(`/api/slotdata/${slotName}`).select("message");
+        const trackerSource = source(`/api/slotdata/${slotName}`).select("message");
 
-    trackerSource.subscribe((message: string) => {
-        const msg = JSON.parse(message);
-        switch (msg.cmd) {
-            case "Item": {
-                if (msg.data.receiver === slotName) {
-                    receivedItems.push(msg.data);
+        trackerSource.subscribe((message: string) => {
+            if (!message) return;
+            let msg = undefined;
+            try {
+                msg = JSON.parse(message);
+            } finally {
+                if (!msg) {
+                    console.error("Failed to parse message", message);
                 }
-                break;
             }
-            case "Hint": {
-                if ((msg.data as Hint).receiver === slotName || (msg.data as Hint).sender === slotName) {
-                    hints.push(msg.data);
+            switch (msg.cmd) {
+                case "Item": {
+                    if (msg.data.receiver === slotName) {
+                        receivedItems.push(msg.data);
+                    }
+                    break;
                 }
-                break;
-            }
-            case "LocationUpdate": {
-                if (msg.data.slot !== slotName) {
-                    return;
+                case "Hint": {
+                    if ((msg.data as Hint).receiver === slotName || (msg.data as Hint).sender === slotName) {
+                        hints.push(msg.data);
+                    }
+                    break;
                 }
-                if (msg.data.checked) {
-                    uncheckedLocations = uncheckedLocations.filter(l => msg.data.location !== l);
-                    checkedLocations.push(msg.data.location as string);
-                } else {
-                    checkedLocations = checkedLocations.filter(l => msg.data.location !== l);
-                    uncheckedLocations.push(msg.data.location as string);
+                case "LocationUpdate": {
+                    if (msg.data.slot !== slotName) {
+                        return;
+                    }
+                    locations[msg.data.location] = msg.data.checked;
+                    break;
                 }
-                break;
-            }
-            case "SlotState": {
-                if (msg.data.slot !== slotName) {
-                    return;
-                }
-                receivedItems = msg.data.receivedItems;
-                checkedLocations = msg.data.checkedLocations;
-                uncheckedLocations = msg.data.uncheckedLocations;
-                hints = msg.data.hints;
+                case "SlotState": {
+                    if (msg.data.slot !== slotName) {
+                        return;
+                    }
+                    receivedItems = msg.data.receivedItems;
+                    locations = {};
+                    for (const loc of msg.data.checkedLocations) {
+                        locations[loc] = true;
+                    }
+                    for (const loc of msg.data.uncheckedLocations) {
+                        locations[loc] = false;
+                    }
+                    hints = msg.data.hints;
 
-                break;
+                    break;
+                }
             }
-        }
-    });
+        });
     })
 
+    let sortMode = $state({key: "Checked", ascending: true});
 
-    let tabs = $derived([
-     { name: "Received Items", comp: ReceivedItemTable, props: {items: receivedItems}  },
-     { name: "Locations", comp: LocationTable, props: {
-             collectedChecks: checkedLocations,
-             uncollectedChecks: uncheckedLocations
-            }
-        },
-    { name: "Hints", comp: HintTable, props: {
-            hints: hints
-        }}
-    ]);
+    let sortedLocations = $derived(Object.keys(locations).toSorted((a, b) => {
+        switch (sortMode.key) {
+            case "Name":
+                return sortMode.ascending ? a.localeCompare(b) : b.localeCompare(a);
+            case "Checked":
+                if (locations[a] == locations[b]) {
+                    // If both checked or not checked, sort on name
+                    return sortMode.ascending ? a.localeCompare(b) : b.localeCompare(a);
+                }
+                if (sortMode.ascending) {
+                    return locations[a] ? -1 : 1;
+                }
+                return locations[a] ? 1 : -1;
+            default:
+                return sortMode.ascending ? a.localeCompare(b) : b.localeCompare(a);
+        }
 
-    let selectedTabIndex = $state(0);
-    let selectedTab = $derived(tabs[selectedTabIndex]);
+    }))
+
 </script>
 
-
-<div class="flex flex-col items-center max-h-4/6">
-
-    <div class="w-6/7 md:w-4/5 max-h-full">
-        <div class="w-full mb-2">
-            {#each tabs as tab, i}
-                <button onclick={() => selectedTabIndex = i} class="mx-2 px-4 py-1 rounded-full  dark:text-white {selectedTabIndex===i?'bg-violet-200 dark:bg-violet-400':'active:bg-gray-200 active:dark:bg-gray-400 hover:bg-gray-100 hover:dark:bg-gray-500'}">{tab.name}</button>
-            {/each}
+<div class="flex w-5/6 min-h-0 flex-col flex-1">
+    <Heading class="w-full pb-8">{slotName}</Heading>
+    <div class="flex gap-2 flex-no-wrap pb-4">
+        {#each receivedItems.toReversed() as item}
+            <ReceivedItemCard {item} slot={slotName}/>
+        {/each}
+    </div>
+    <Hr/>
+    <div class="flex gap-2 min-h-0 flex-1">
+        <div class="flex flex-col min-h-0 p-2 gap-2 w-4/5">
+            <div class="flex justify-between mb-2 items-baseline w-full shrink-0">
+                <Heading class="text-xl">Locations</Heading>
+                <Button color="light">{sortMode.key} {sortMode.ascending ? "⏶" : "⏷"}</Button>
+                <Dropdown simple>
+                    <DropdownItem onclick={() => sortMode = {key: "Checked", ascending: true}}>Checked ⏶</DropdownItem>
+                    <DropdownItem onclick={() => sortMode = {key: "Checked", ascending: false}}>Checked ⏷</DropdownItem>
+                    <DropdownItem onclick={() => sortMode = {key: "Name", ascending: true}}>Name ⏶</DropdownItem>
+                    <DropdownItem onclick={() => sortMode = {key: "Name", ascending: false}}>Name ⏷</DropdownItem>
+                </Dropdown>
+            </div>
+            <div class="grid grid-cols-4 min-h-0 flex-1 overflow-y-auto no-scrollbar pb-4 gap-2">
+                {#each sortedLocations as loc}
+                    <LocationCard location={loc} checked={locations[loc]}/>
+                {/each}
+            </div>
         </div>
-        <div class="rounded-xl overflow-scroll max-h-full">
-            <selectedTab.comp {...selectedTab.props} />
+        <div class="bg-zinc-200 dark:bg-zinc-700 h-full my-8 mx-4 w-px shrink-0">
+
+        </div>
+        <div class="flex min-h-0 flex-1 flex-col">
+            <div class="flex justify-between mb-2 items-center w-full h-15 shrink-0">
+                <Heading class="text-xl">Hints</Heading>
+            </div>
+            <div class="flex flex-col min-h-0 flex-1 overflow-y-auto pb-4 gap-2 no-scrollbar">
+                {#each hints as hint}
+                    <HintCard {hint} small/>
+                {/each}
+            </div>
         </div>
     </div>
 </div>
-

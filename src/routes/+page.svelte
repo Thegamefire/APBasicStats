@@ -4,8 +4,8 @@
     import type {GeneralData, LogNode, Hint, GeneralSlotData} from "$lib/server/tracker";
     import {Hr, Button, Dropdown, DropdownItem} from "flowbite-svelte";
     import APConsole from "$lib/components/APConsole.svelte";
-    import SlotSummary from "$lib/components/SlotSummary.svelte";
-    import HintComponent from "$lib/components/Hint.svelte";
+    import SlotSummaryCard from "$lib/components/Cards/SlotSummaryCard.svelte";
+    import HintCardComponent from "$lib/components/Cards/HintCard.svelte";
 
     let tracker: GeneralData = $state({logs: [], hints: [], slotData: {}});
 
@@ -117,13 +117,13 @@
         </div>
         <div class="flex flex-wrap gap-2 min-h-0">
             {#each sortedSlots as slot}
-                <SlotSummary slotName={slot} slotData={slotData[slot]}/>
+                <SlotSummaryCard slotName={slot} slotData={slotData[slot]}/>
             {/each}
         </div>
         <Hr class="m-8"/>
         <div class=" flex-1 overflow-scroll min-h-0 grid grid-cols-2 xl:grid-cols-4 gap-2 pb-4 no-scrollbar">
             {#each hints as hint (hint.location)}
-                <HintComponent {hint}/>
+                <HintCardComponent {hint}/>
             {/each}
         </div>
     </div>
