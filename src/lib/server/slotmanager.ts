@@ -191,6 +191,10 @@ export class SlotManager extends EventEmitter {
             hints: this.hints.items()
         }
     }
+
+    kill = () => {
+        this.client.deathLink.sendDeathLink(this.slot, `${this.slot} was killed by someone using APBasicStats`);
+    }
 }
 
 export type SlotState = {
