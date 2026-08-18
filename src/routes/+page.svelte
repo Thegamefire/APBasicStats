@@ -6,6 +6,8 @@
     import APConsole from "$lib/components/APConsole.svelte";
     import SlotSummaryCard from "$lib/components/Cards/SlotSummaryCard.svelte";
     import HintCardComponent from "$lib/components/Cards/HintCard.svelte";
+    import {audioManager} from "$lib/audioManager";
+    import DeathSfx from "$lib/assets/deathSfx.wav";
 
     let tracker: GeneralData = $state({logs: [], hints: [], slotData: {}});
 
@@ -48,7 +50,11 @@
                 case "Death": {
                     const slot = slotData[msg.data.slot];
 
+
                     if (slot) {
+                        if (slot.deathCount != msg.data.deathCount) {
+                            audioManager.play(DeathSfx);
+                        }
                         slot.deathCount = msg.data.deathCount;
                     }
 
@@ -90,6 +96,10 @@
                 return a.localeCompare(b) * (sortMode.ascending ? 1 : -1);
         }
     }))
+
+    const playAudio = () => {
+        audioManager.play(DeathSfx);
+    }
 
 
 </script>
