@@ -7,6 +7,7 @@
     import {Button, Dropdown, DropdownItem, Heading, Hr} from "flowbite-svelte";
     import LocationCard from "$lib/components/Cards/LocationCard.svelte";
     import HintCard from "$lib/components/Cards/HintCard.svelte";
+    import {horizontalScroll} from "$lib/util";
 
     let {data} = $props()
     const slotName = $derived(data.slotName);
@@ -88,18 +89,21 @@
                 return sortMode.ascending ? a.localeCompare(b) : b.localeCompare(a);
         }
 
-    }))
+    }));
 
+
+    let itemContainer: HTMLElement | null = $state(null);
 </script>
 
 <div class="flex w-5/6 min-h-0 flex-col flex-1">
-    <Heading class="w-full pb-8">{slotName}</Heading>
-    <div class="flex gap-2 flex-no-wrap pb-4">
+    <Heading class="w-full pb-4">{slotName}</Heading>
+    <div class="flex gap-2 flex-no-wrap pb-4 overflow-x-auto no-scrollbar"
+         onwheel={(evt) => horizontalScroll(evt, evt.target)} bind:this={itemContainer}>
         {#each receivedItems.toReversed() as item}
-            <ReceivedItemCard {item} slot={slotName}/>
+            <ReceivedItemCard {item} slot={slotName} {itemContainer}/>
         {/each}
     </div>
-    <Hr/>
+    <Hr class="my-2" />
     <div class="flex gap-2 min-h-0 flex-1">
         <div class="flex flex-col min-h-0 p-2 gap-2 w-4/5">
             <div class="flex justify-between mb-2 items-baseline w-full shrink-0">
