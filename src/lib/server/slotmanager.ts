@@ -194,6 +194,7 @@ export class SlotManager extends EventEmitter {
 
     kill = () => {
         this.client.deathLink.sendDeathLink(this.slot, `${this.slot} was killed by someone using APBasicStats`);
+        this.onDeath(this.slot, Date.now(), `${this.slot} was killed by someone using APBasicStats`)
     }
 }
 
