@@ -6,7 +6,7 @@
 </script>
 
 <Card class="p-2 flex flex-row items-center justify-between">
-    <span>{location}</span>
+    <span class="dark:text-white">{location}</span>
     {#if checked}
         <Span highlight="lime" class="text-lg"><CheckIcon/></Span>
     {/if}
