@@ -25,7 +25,7 @@
     <Hr/>
     <div class="flex flex-col gap-2">
         {#each slots as slot}
-        <Span class="dark:text-white font-xl font-bold flex justify-between items-center color-primary">{slot}
+        <Span class="dark:text-white font-xl font-bold flex justify-between items-center">{slot}
             <Button color="red" onclick={() => kill(slot)}>Send Death</Button>
         </Span>
         {/each}
